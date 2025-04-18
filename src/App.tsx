@@ -8,6 +8,10 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+import Services from "./pages/Services";
+import Inventory from "./pages/Inventory";
+import PriceHistory from "./pages/PriceHistory";
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -16,6 +20,9 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/services" element={<Services />} />
+          <Route path="/inventory" element={<Inventory />} />
+          <Route path="/price-history" element={<PriceHistory />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
