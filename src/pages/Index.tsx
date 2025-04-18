@@ -11,24 +11,36 @@ import {
   FileText,
   TrendingUp,
   TrendingDown,
-  Users
+  Users,
+  Search
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 
 const DashboardMetricCard = ({ 
   title, 
   value, 
   icon: Icon, 
   trend = 0,
-  variant = 'default' 
+  variant = 'default',
+  onClick
 }: { 
   title: string, 
   value: string, 
   icon: React.ElementType,
   trend?: number,
-  variant?: 'default' | 'secondary' | 'destructive'
+  variant?: 'default' | 'secondary' | 'destructive',
+  onClick?: () => void
 }) => (
-  <Card>
+  <Card className={onClick ? "cursor-pointer hover:shadow-md transition-shadow" : ""} onClick={onClick}>
     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
       <CardTitle className="text-sm font-medium">{title}</CardTitle>
       <Icon className="h-4 w-4 text-muted-foreground" />
@@ -41,11 +53,43 @@ const DashboardMetricCard = ({
           {Math.abs(trend)}% so với tháng trước
         </p>
       )}
+      {onClick && <div className="text-xs text-blue-500 mt-1 flex items-center"><Search className="h-3 w-3 mr-1" /> Xem chi tiết</div>}
     </CardContent>
   </Card>
 );
 
 const Index = () => {
+  const [showServicesDialog, setShowServicesDialog] = React.useState(false);
+  const [showRevenueDialog, setShowRevenueDialog] = React.useState(false);
+  const [showExpensesDialog, setShowExpensesDialog] = React.useState(false);
+  const [showProfitDialog, setShowProfitDialog] = React.useState(false);
+
+  // Demo data
+  const todayServices = [
+    { id: 1, time: '09:30', customer: 'Nguyễn Văn A', service: 'Rửa xe cơ bản', amount: 150000 },
+    { id: 2, time: '10:15', customer: 'Trần Thị B', service: 'Thay dầu máy', amount: 450000 },
+    { id: 3, time: '11:30', customer: 'Lê Văn C', service: 'Rửa xe + Hút bụi', amount: 200000 },
+    { id: 4, time: '13:45', customer: 'Phạm Văn D', service: 'Đánh bóng xe', amount: 600000 }
+  ];
+
+  const revenueDetails = [
+    { category: 'Dịch vụ rửa xe', amount: 2500000 },
+    { category: 'Thay dầu & bảo dưỡng', amount: 1800000 },
+    { category: 'Đánh bóng & làm đẹp', amount: 1380000 }
+  ];
+
+  const expensesDetails = [
+    { category: 'Vật tư tiêu hao', amount: 650000 },
+    { category: 'Tiền điện nước', amount: 350000 },
+    { category: 'Lương nhân viên', amount: 250000 }
+  ];
+
+  const profitBreakdown = [
+    { category: 'Doanh thu', amount: 5680000 },
+    { category: 'Chi phí', amount: -1250000 },
+    { category: 'Lợi nhuận', amount: 4430000 }
+  ];
+
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6">Phần Mềm Quản Lý Rửa Xe</h1>
@@ -56,6 +100,7 @@ const Index = () => {
           value="24" 
           icon={Car} 
           trend={12}
+          onClick={() => setShowServicesDialog(true)}
         />
         <DashboardMetricCard 
           title="Doanh Thu" 
@@ -63,12 +108,14 @@ const Index = () => {
           icon={DollarSign} 
           variant="secondary"
           trend={8} 
+          onClick={() => setShowRevenueDialog(true)}
         />
         <DashboardMetricCard 
           title="Chi Phí" 
           value="1.250.000₫" 
           icon={TrendingDown} 
           trend={-5}
+          onClick={() => setShowExpensesDialog(true)}
         />
         <DashboardMetricCard 
           title="Lợi Nhuận" 
@@ -76,8 +123,181 @@ const Index = () => {
           icon={TrendingUp} 
           variant="destructive"
           trend={15} 
+          onClick={() => setShowProfitDialog(true)}
         />
       </div>
+
+      {/* Services Dialog */}
+      <Dialog open={showServicesDialog} onOpenChange={setShowServicesDialog}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Chi tiết Dịch vụ Hôm nay</DialogTitle>
+            <DialogDescription>
+              Danh sách các dịch vụ đã thực hiện trong ngày
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Thời gian</TableHead>
+                  <TableHead>Khách hàng</TableHead>
+                  <TableHead>Dịch vụ</TableHead>
+                  <TableHead>Thành tiền</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {todayServices.map((service) => (
+                  <TableRow key={service.id}>
+                    <TableCell>{service.time}</TableCell>
+                    <TableCell>{service.customer}</TableCell>
+                    <TableCell>{service.service}</TableCell>
+                    <TableCell>{service.amount.toLocaleString('vi-VN')}đ</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <div className="mt-4 flex justify-between">
+              <div>
+                <span className="text-sm text-muted-foreground">Tổng số dịch vụ: </span>
+                <span className="font-medium">24</span>
+              </div>
+              <div>
+                <Link to="/reports">
+                  <Button size="sm" variant="outline">
+                    Xem báo cáo đầy đủ
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Revenue Dialog */}
+      <Dialog open={showRevenueDialog} onOpenChange={setShowRevenueDialog}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Chi tiết Doanh thu</DialogTitle>
+            <DialogDescription>
+              Thông tin doanh thu theo từng danh mục dịch vụ
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Danh mục</TableHead>
+                  <TableHead className="text-right">Doanh thu</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {revenueDetails.map((item, i) => (
+                  <TableRow key={i}>
+                    <TableCell>{item.category}</TableCell>
+                    <TableCell className="text-right">{item.amount.toLocaleString('vi-VN')}đ</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <div className="mt-4 flex justify-between">
+              <div>
+                <span className="text-sm text-muted-foreground">Tổng doanh thu: </span>
+                <span className="font-medium">5.680.000₫</span>
+              </div>
+              <div>
+                <Link to="/reports">
+                  <Button size="sm" variant="outline">
+                    Xem báo cáo đầy đủ
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Expenses Dialog */}
+      <Dialog open={showExpensesDialog} onOpenChange={setShowExpensesDialog}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Chi tiết Chi phí</DialogTitle>
+            <DialogDescription>
+              Thông tin chi phí phát sinh
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Danh mục</TableHead>
+                  <TableHead className="text-right">Chi phí</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {expensesDetails.map((item, i) => (
+                  <TableRow key={i}>
+                    <TableCell>{item.category}</TableCell>
+                    <TableCell className="text-right">{item.amount.toLocaleString('vi-VN')}đ</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <div className="mt-4 flex justify-between">
+              <div>
+                <span className="text-sm text-muted-foreground">Tổng chi phí: </span>
+                <span className="font-medium">1.250.000₫</span>
+              </div>
+              <div>
+                <Link to="/reports">
+                  <Button size="sm" variant="outline">
+                    Xem báo cáo đầy đủ
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Profit Dialog */}
+      <Dialog open={showProfitDialog} onOpenChange={setShowProfitDialog}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Chi tiết Lợi nhuận</DialogTitle>
+            <DialogDescription>
+              Thông tin tính toán lợi nhuận
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Hạng mục</TableHead>
+                  <TableHead className="text-right">Số tiền</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {profitBreakdown.map((item, i) => (
+                  <TableRow key={i}>
+                    <TableCell>{item.category}</TableCell>
+                    <TableCell className={`text-right ${item.amount < 0 ? 'text-red-600' : item.category === 'Lợi nhuận' ? 'text-green-600 font-bold' : ''}`}>
+                      {item.amount.toLocaleString('vi-VN')}đ
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <div className="mt-4 flex justify-end">
+              <Link to="/reports">
+                <Button size="sm" variant="outline">
+                  Xem báo cáo đầy đủ
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <div className="grid gap-4 md:grid-cols-3 mb-6">
         <Card>
@@ -195,6 +415,16 @@ const Index = () => {
                 <Car className="mr-2 h-4 w-4" /> Quản Lý Danh Mục Xe
               </Button>
             </Link>
+            <Link to="/customers" className="w-full">
+              <Button variant="outline" className="w-full">
+                <Users className="mr-2 h-4 w-4" /> Quản Lý Khách Hàng
+              </Button>
+            </Link>
+            <Link to="/reports" className="w-full">
+              <Button variant="outline" className="w-full">
+                <BarChart className="mr-2 h-4 w-4" /> Báo Cáo & Thống Kê
+              </Button>
+            </Link>
           </CardContent>
         </Card>
 
@@ -221,9 +451,11 @@ const Index = () => {
                 <span className="text-muted-foreground">11:45</span>
               </div>
             </div>
-            <Button variant="link" className="mt-4 px-0">
-              Xem tất cả dịch vụ
-            </Button>
+            <Link to="/services">
+              <Button variant="link" className="mt-4 px-0">
+                Xem tất cả dịch vụ
+              </Button>
+            </Link>
           </CardContent>
         </Card>
       </div>

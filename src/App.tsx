@@ -14,6 +14,8 @@ import Inventory from "./pages/Inventory";
 import PriceHistory from "./pages/PriceHistory";
 import Invoices from "./pages/Invoices";
 import CarCategories from "./pages/CarCategories";
+import Customers from "./pages/Customers";
+import Reports from "./pages/Reports";
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -28,6 +30,8 @@ const App = () => (
           <Route path="/price-history" element={<PriceHistory />} />
           <Route path="/invoices" element={<Invoices />} />
           <Route path="/car-categories" element={<CarCategories />} />
+          <Route path="/customers" element={<Customers />} />
+          <Route path="/reports" element={<Reports />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
