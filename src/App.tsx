@@ -11,11 +11,16 @@ const queryClient = new QueryClient();
 
 import Services from "./pages/Services";
 import Inventory from "./pages/Inventory";
+import EnhancedInventory from "./pages/EnhancedInventory"; // New enhanced inventory
 import PriceHistory from "./pages/PriceHistory";
 import Invoices from "./pages/Invoices";
 import CarCategories from "./pages/CarCategories";
 import Customers from "./pages/Customers";
 import Reports from "./pages/Reports";
+import Sales from "./pages/Sales"; // New sales module
+import Accounting from "./pages/Accounting"; // New accounting module
+import Purchasing from "./pages/Purchasing"; // New purchasing module
+import Batches from "./pages/Batches"; // New batches management
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -27,11 +32,16 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/services" element={<Services />} />
           <Route path="/inventory" element={<Inventory />} />
+          <Route path="/enhanced-inventory" element={<EnhancedInventory />} />
           <Route path="/price-history" element={<PriceHistory />} />
           <Route path="/invoices" element={<Invoices />} />
           <Route path="/car-categories" element={<CarCategories />} />
           <Route path="/customers" element={<Customers />} />
           <Route path="/reports" element={<Reports />} />
+          <Route path="/sales" element={<Sales />} />
+          <Route path="/accounting" element={<Accounting />} />
+          <Route path="/purchasing" element={<Purchasing />} />
+          <Route path="/batches" element={<Batches />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
