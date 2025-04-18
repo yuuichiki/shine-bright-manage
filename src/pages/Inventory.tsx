@@ -23,7 +23,20 @@ import {
   DialogTitle, 
   DialogTrigger 
 } from "@/components/ui/dialog";
-import { Plus, Edit, Trash2 } from 'lucide-react';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { Plus, Edit, Trash2, AlertCircle } from 'lucide-react';
+import { 
+  Tabs, 
+  TabsContent, 
+  TabsList, 
+  TabsTrigger 
+} from "@/components/ui/tabs";
 
 type InventoryItem = {
   id: number;
@@ -32,16 +45,25 @@ type InventoryItem = {
   quantity: number;
   unit: string;
   reorderPoint: number;
+  unitPrice: number;
+  type: 'consumable' | 'equipment';
+  usageRate?: string; // Chi tiết sử dụng trung bình, vd: "50ml/xe nhỏ"
 };
 
 const Inventory = () => {
   const [inventory, setInventory] = useState<InventoryItem[]>([
-    { id: 1, name: 'Car Wash Soap', category: 'Cleaning', quantity: 50, unit: 'Liters', reorderPoint: 20 },
-    { id: 2, name: 'Engine Oil 5W-30', category: 'Maintenance', quantity: 30, unit: 'Quarts', reorderPoint: 15 },
-    { id: 3, name: 'Microfiber Towels', category: 'Cleaning Supplies', quantity: 100, unit: 'Pieces', reorderPoint: 50 }
+    { id: 1, name: 'Nước rửa xe', category: 'Hóa chất', quantity: 50, unit: 'Lít', reorderPoint: 20, unitPrice: 40000, type: 'consumable', usageRate: '0.2 Lít/xe con, 0.3 Lít/xe lớn' },
+    { id: 2, name: 'Dầu động cơ 5W-30', category: 'Bảo dưỡng', quantity: 30, unit: 'Lít', reorderPoint: 15, unitPrice: 180000, type: 'consumable', usageRate: '4 Lít/xe con, 6 Lít/xe lớn' },
+    { id: 3, name: 'Khăn lau microfiber', category: 'Dụng cụ lau chùi', quantity: 100, unit: 'Chiếc', reorderPoint: 50, unitPrice: 15000, type: 'consumable', usageRate: '2 Chiếc/xe' },
+    { id: 4, name: 'Máy rửa xe áp lực cao', category: 'Thiết bị', quantity: 2, unit: 'Chiếc', reorderPoint: 1, unitPrice: 5000000, type: 'equipment' },
+    { id: 5, name: 'Máy hút bụi công nghiệp', category: 'Thiết bị', quantity: 2, unit: 'Chiếc', reorderPoint: 1, unitPrice: 3000000, type: 'equipment' },
   ]);
 
-  const [newItem, setNewItem] = useState<Partial<InventoryItem>>({});
+  const [newItem, setNewItem] = useState<Partial<InventoryItem>>({
+    type: 'consumable'
+  });
+
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const handleAddItem = () => {
     if (newItem.name && newItem.category && newItem.quantity) {
@@ -50,96 +72,242 @@ const Inventory = () => {
         id: inventory.length + 1
       } as InventoryItem;
       setInventory([...inventory, itemToAdd]);
-      setNewItem({});
+      setNewItem({ type: 'consumable' });
+      setIsDialogOpen(false);
     }
   };
 
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+  };
+
+  const getLowStockItems = () => {
+    return inventory.filter(item => item.quantity <= item.reorderPoint);
+  };
+
+  const lowStockItems = getLowStockItems();
+
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">Inventory Management</h1>
+      <h1 className="text-3xl font-bold mb-6">Quản Lý Kho Hàng</h1>
 
-      <Card>
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <CardTitle>Inventory List</CardTitle>
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="mr-2 h-4 w-4" /> Add Item
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add New Inventory Item</DialogTitle>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <Input 
-                    placeholder="Item Name" 
-                    value={newItem.name || ''}
-                    onChange={(e) => setNewItem({...newItem, name: e.target.value})}
-                  />
-                  <Input 
-                    placeholder="Category" 
-                    value={newItem.category || ''}
-                    onChange={(e) => setNewItem({...newItem, category: e.target.value})}
-                  />
-                  <Input 
-                    type="number" 
-                    placeholder="Quantity" 
-                    value={newItem.quantity || ''}
-                    onChange={(e) => setNewItem({...newItem, quantity: Number(e.target.value)})}
-                  />
-                  <Input 
-                    placeholder="Unit" 
-                    value={newItem.unit || ''}
-                    onChange={(e) => setNewItem({...newItem, unit: e.target.value})}
-                  />
-                  <Input 
-                    type="number" 
-                    placeholder="Reorder Point" 
-                    value={newItem.reorderPoint || ''}
-                    onChange={(e) => setNewItem({...newItem, reorderPoint: Number(e.target.value)})}
-                  />
-                  <Button onClick={handleAddItem}>Save Item</Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+      {lowStockItems.length > 0 && (
+        <div className="bg-amber-50 border-l-4 border-amber-500 p-4 mb-6">
+          <div className="flex items-center">
+            <AlertCircle className="h-5 w-5 text-amber-500 mr-2" />
+            <p className="font-medium text-amber-700">
+              Có {lowStockItems.length} sản phẩm cần nhập thêm hàng
+            </p>
           </div>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Quantity</TableHead>
-                <TableHead>Reorder Point</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {inventory.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell>{item.name}</TableCell>
-                  <TableCell>{item.category}</TableCell>
-                  <TableCell>{item.quantity} {item.unit}</TableCell>
-                  <TableCell>{item.reorderPoint}</TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
-                      <Button variant="outline" size="icon">
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button variant="destructive" size="icon">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+        </div>
+      )}
+
+      <Tabs defaultValue="all">
+        <TabsList className="mb-4">
+          <TabsTrigger value="all">Tất cả</TabsTrigger>
+          <TabsTrigger value="consumable">Vật tư hao phí</TabsTrigger>
+          <TabsTrigger value="equipment">Thiết bị</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="all">
+          <Card>
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <CardTitle>Danh Sách Hàng Tồn Kho</CardTitle>
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button>
+                      <Plus className="mr-2 h-4 w-4" /> Thêm Sản Phẩm
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Thêm Sản Phẩm Mới</DialogTitle>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      <Input 
+                        placeholder="Tên sản phẩm" 
+                        value={newItem.name || ''}
+                        onChange={(e) => setNewItem({...newItem, name: e.target.value})}
+                      />
+                      <Input 
+                        placeholder="Phân loại" 
+                        value={newItem.category || ''}
+                        onChange={(e) => setNewItem({...newItem, category: e.target.value})}
+                      />
+                      <Select
+                        value={newItem.type}
+                        onValueChange={(value) => setNewItem({...newItem, type: value as 'consumable' | 'equipment'})}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Loại sản phẩm" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="consumable">Vật tư hao phí</SelectItem>
+                          <SelectItem value="equipment">Thiết bị</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Input 
+                        type="number" 
+                        placeholder="Số lượng" 
+                        value={newItem.quantity || ''}
+                        onChange={(e) => setNewItem({...newItem, quantity: Number(e.target.value)})}
+                      />
+                      <Input 
+                        placeholder="Đơn vị" 
+                        value={newItem.unit || ''}
+                        onChange={(e) => setNewItem({...newItem, unit: e.target.value})}
+                      />
+                      <Input 
+                        type="number" 
+                        placeholder="Giá đơn vị (VNĐ)" 
+                        value={newItem.unitPrice || ''}
+                        onChange={(e) => setNewItem({...newItem, unitPrice: Number(e.target.value)})}
+                      />
+                      <Input 
+                        type="number" 
+                        placeholder="Mức cần đặt hàng" 
+                        value={newItem.reorderPoint || ''}
+                        onChange={(e) => setNewItem({...newItem, reorderPoint: Number(e.target.value)})}
+                      />
+                      {newItem.type === 'consumable' && (
+                        <Input 
+                          placeholder="Định mức sử dụng (vd: 0.2 Lít/xe)" 
+                          value={newItem.usageRate || ''}
+                          onChange={(e) => setNewItem({...newItem, usageRate: e.target.value})}
+                        />
+                      )}
+                      <Button onClick={handleAddItem}>Lưu Sản Phẩm</Button>
                     </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Tên</TableHead>
+                    <TableHead>Phân Loại</TableHead>
+                    <TableHead>Loại</TableHead>
+                    <TableHead>Số Lượng</TableHead>
+                    <TableHead>Giá Đơn Vị</TableHead>
+                    <TableHead>Tổng Giá Trị</TableHead>
+                    <TableHead>Thao Tác</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {inventory.map((item) => (
+                    <TableRow key={item.id} className={item.quantity <= item.reorderPoint ? "bg-amber-50" : ""}>
+                      <TableCell>{item.name}</TableCell>
+                      <TableCell>{item.category}</TableCell>
+                      <TableCell>{item.type === 'consumable' ? 'Vật tư hao phí' : 'Thiết bị'}</TableCell>
+                      <TableCell className={item.quantity <= item.reorderPoint ? "text-red-600 font-medium" : ""}>
+                        {item.quantity} {item.unit} {item.quantity <= item.reorderPoint && "(Cần nhập thêm)"}
+                      </TableCell>
+                      <TableCell>{formatCurrency(item.unitPrice)}</TableCell>
+                      <TableCell>{formatCurrency(item.quantity * item.unitPrice)}</TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          <Button variant="outline" size="icon">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button variant="destructive" size="icon">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="consumable">
+          <Card>
+            <CardHeader>
+              <CardTitle>Vật Tư Hao Phí</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Tên</TableHead>
+                    <TableHead>Phân Loại</TableHead>
+                    <TableHead>Số Lượng</TableHead>
+                    <TableHead>Định Mức Sử Dụng</TableHead>
+                    <TableHead>Giá Đơn Vị</TableHead>
+                    <TableHead>Thao Tác</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {inventory.filter(item => item.type === 'consumable').map((item) => (
+                    <TableRow key={item.id} className={item.quantity <= item.reorderPoint ? "bg-amber-50" : ""}>
+                      <TableCell>{item.name}</TableCell>
+                      <TableCell>{item.category}</TableCell>
+                      <TableCell>{item.quantity} {item.unit}</TableCell>
+                      <TableCell>{item.usageRate}</TableCell>
+                      <TableCell>{formatCurrency(item.unitPrice)}</TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          <Button variant="outline" size="icon">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button variant="destructive" size="icon">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="equipment">
+          <Card>
+            <CardHeader>
+              <CardTitle>Thiết Bị</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Tên Thiết Bị</TableHead>
+                    <TableHead>Phân Loại</TableHead>
+                    <TableHead>Số Lượng</TableHead>
+                    <TableHead>Giá Trị</TableHead>
+                    <TableHead>Thao Tác</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {inventory.filter(item => item.type === 'equipment').map((item) => (
+                    <TableRow key={item.id}>
+                      <TableCell>{item.name}</TableCell>
+                      <TableCell>{item.category}</TableCell>
+                      <TableCell>{item.quantity} {item.unit}</TableCell>
+                      <TableCell>{formatCurrency(item.unitPrice)}</TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          <Button variant="outline" size="icon">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button variant="destructive" size="icon">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
