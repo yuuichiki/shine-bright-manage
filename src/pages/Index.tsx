@@ -7,7 +7,8 @@ import {
   Wrench, 
   BarChart, 
   Package, 
-  DollarSign 
+  DollarSign,
+  FileText 
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -82,6 +83,11 @@ const Index = () => {
             <Link to="/price-history" className="w-full">
               <Button variant="outline" className="w-full">
                 <BarChart className="mr-2 h-4 w-4" /> Price History
+              </Button>
+            </Link>
+            <Link to="/invoices" className="w-full">
+              <Button variant="outline" className="w-full">
+                <FileText className="mr-2 h-4 w-4" /> Quản lý Hóa đơn
               </Button>
             </Link>
           </CardContent>
