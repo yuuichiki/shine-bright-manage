@@ -1,4 +1,3 @@
-
 const path = require('path');
 const fs = require('fs');
 const initSqlJs = require('sql.js');
@@ -20,6 +19,9 @@ async function initializeDatabase() {
     // Create tables
     createTables();
     
+    // Clear sample data before loading new demo
+    clearSampleData();
+    
     // Load sample data for testing
     loadSampleData();
     
@@ -28,6 +30,21 @@ async function initializeDatabase() {
     console.error("Error initializing database:", error);
     throw error;
   }
+}
+
+function clearSampleData() {
+  // Xóa dữ liệu demo từ các bảng chính
+  const tables = [
+    "invoice_products", "invoice_services", "invoices",
+    "inventory", "batches", "suppliers", "product_categories",
+    "services", "customers", "customer_vehicles", "landed_costs",
+    "oil_changes", "users"
+  ];
+  tables.forEach(tbl => {
+    try {
+      db.run(`DELETE FROM ${tbl}`);
+    } catch (e) {}
+  });
 }
 
 function createTables() {
@@ -200,6 +217,17 @@ function createTables() {
     );
   `);
 
+  // Bảng users
+  db.run(`
+    CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT UNIQUE NOT NULL,
+      password TEXT NOT NULL,
+      display_name TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
   console.log("Database tables created successfully");
 }
 
@@ -275,6 +303,14 @@ function loadSampleData() {
       console.log(`Service ${service.name} already exists`);
     }
   });
+
+  // Thêm tài khoản quản trị demo cho login:
+  try {
+    db.run(
+      "INSERT INTO users (username, password, display_name) VALUES (?, ?, ?)",
+      ["admin", "123456", "Quản trị viên"]
+    );
+  } catch (e) {}
 
   console.log('Sample data loaded successfully');
 }

@@ -1,4 +1,3 @@
-
 const express = require('express');
 const cors = require('cors');
 const { getDb } = require('./database');
@@ -18,6 +17,32 @@ app.use(async (req, res, next) => {
   } catch (err) {
     console.error("Database connection error:", err);
     res.status(500).json({ error: "Database connection failed" });
+  }
+});
+
+// --- AUTH API ---
+
+app.post('/api/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    if (!(username && password)) {
+      return res.status(400).json({ error: "Thiếu username hoặc password" });
+    }
+    // Truy vấn tài khoản
+    const user = req.db.get(
+      "SELECT id, username, display_name FROM users WHERE username = ? AND password = ?",
+      [username, password]
+    );
+    if (!user) {
+      return res.status(401).json({ error: "Sai tài khoản hoặc mật khẩu" });
+    }
+    // Đơn giản trả thẳng user object (demo)
+    return res.json({
+      user,
+      token: "dummy-demo-token" // Production: trả JWT
+    });
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
   }
 });
 
