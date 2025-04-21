@@ -1,57 +1,20 @@
 
 import React, { useState } from 'react';
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger,
-  DialogFooter 
-} from "@/components/ui/dialog";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
-import { Plus, Edit, Trash2, AlertCircle, ImageIcon } from 'lucide-react';
-import { 
-  Tabs, 
-  TabsContent, 
-  TabsList, 
-  TabsTrigger 
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AlertCircle, Plus } from 'lucide-react';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger
 } from "@/components/ui/tabs";
-
-type InventoryItem = {
-  id: number;
-  name: string;
-  category: string;
-  quantity: number;
-  unit: string;
-  reorderPoint: number;
-  unitPrice: number;
-  type: 'consumable' | 'equipment';
-  usageRate?: string;
-  importDate: string;
-  invoiceImage?: string;
-};
+import { Button } from "@/components/ui/button";
+import { InventoryTableAll } from "@/components/inventory/InventoryTableAll";
+import { InventoryTableConsumable } from "@/components/inventory/InventoryTableConsumable";
+import { InventoryTableEquipment } from "@/components/inventory/InventoryTableEquipment";
+import { InventoryAddEditDialog } from "@/components/inventory/InventoryAddEditDialog";
+import { InvoiceImageDialog } from "@/components/inventory/InvoiceImageDialog";
+import type { InventoryItem } from "@/components/inventory/types";
 
 const Inventory = () => {
   const [inventory, setInventory] = useState<InventoryItem[]>([
@@ -66,7 +29,6 @@ const Inventory = () => {
     type: 'consumable',
     importDate: new Date().toISOString().split('T')[0]
   });
-
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -93,7 +55,7 @@ const Inventory = () => {
 
   const handleEditSave = () => {
     if (editingItem) {
-      const updatedInventory = inventory.map(item => 
+      const updatedInventory = inventory.map(item =>
         item.id === editingItem.id ? editingItem : item
       );
       setInventory(updatedInventory);
@@ -116,16 +78,16 @@ const Inventory = () => {
         if (item) {
           // Updating existing item
           const updatedItem = { ...item, invoiceImage: base64String };
-          const updatedInventory = inventory.map(i => 
+          const updatedInventory = inventory.map(i =>
             i.id === item.id ? updatedItem : i
           );
           setInventory(updatedInventory);
         } else if (editingItem) {
           // In edit dialog
-          setEditingItem({...editingItem, invoiceImage: base64String});
+          setEditingItem({ ...editingItem, invoiceImage: base64String });
         } else {
           // In add dialog
-          setNewItem({...newItem, invoiceImage: base64String});
+          setNewItem({ ...newItem, invoiceImage: base64String });
         }
       };
       reader.readAsDataURL(file);
@@ -174,437 +136,81 @@ const Inventory = () => {
             <CardHeader>
               <div className="flex justify-between items-center">
                 <CardTitle>Danh Sách Hàng Tồn Kho</CardTitle>
-                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button>
-                      <Plus className="mr-2 h-4 w-4" /> Thêm Sản Phẩm
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Thêm Sản Phẩm Mới</DialogTitle>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                      <Input 
-                        placeholder="Tên sản phẩm" 
-                        value={newItem.name || ''}
-                        onChange={(e) => setNewItem({...newItem, name: e.target.value})}
-                      />
-                      <Input 
-                        placeholder="Phân loại" 
-                        value={newItem.category || ''}
-                        onChange={(e) => setNewItem({...newItem, category: e.target.value})}
-                      />
-                      <Select
-                        value={newItem.type}
-                        onValueChange={(value) => setNewItem({...newItem, type: value as 'consumable' | 'equipment'})}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Loại sản phẩm" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="consumable">Vật tư hao phí</SelectItem>
-                          <SelectItem value="equipment">Thiết bị</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Input 
-                        type="number" 
-                        placeholder="Số lượng" 
-                        value={newItem.quantity || ''}
-                        onChange={(e) => setNewItem({...newItem, quantity: Number(e.target.value)})}
-                      />
-                      <Input 
-                        placeholder="Đơn vị" 
-                        value={newItem.unit || ''}
-                        onChange={(e) => setNewItem({...newItem, unit: e.target.value})}
-                      />
-                      <Input 
-                        type="number" 
-                        placeholder="Giá đơn vị (VNĐ)" 
-                        value={newItem.unitPrice || ''}
-                        onChange={(e) => setNewItem({...newItem, unitPrice: Number(e.target.value)})}
-                      />
-                      <Input 
-                        type="number" 
-                        placeholder="Mức cần đặt hàng" 
-                        value={newItem.reorderPoint || ''}
-                        onChange={(e) => setNewItem({...newItem, reorderPoint: Number(e.target.value)})}
-                      />
-                      <Input 
-                        type="date" 
-                        placeholder="Ngày nhập hàng" 
-                        value={newItem.importDate || ''}
-                        onChange={(e) => setNewItem({...newItem, importDate: e.target.value})}
-                      />
-                      {newItem.type === 'consumable' && (
-                        <Input 
-                          placeholder="Định mức sử dụng (vd: 0.2 Lít/xe)" 
-                          value={newItem.usageRate || ''}
-                          onChange={(e) => setNewItem({...newItem, usageRate: e.target.value})}
-                        />
-                      )}
-                      <div className="grid gap-2">
-                        <label htmlFor="invoice-image" className="text-sm font-medium">
-                          Hình ảnh hóa đơn nhập hàng
-                        </label>
-                        <Input 
-                          id="invoice-image"
-                          type="file" 
-                          accept="image/*"
-                          onChange={(e) => handleImageUpload(e)}
-                        />
-                      </div>
-                      <Button onClick={handleAddItem}>Lưu Sản Phẩm</Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
+                <Button onClick={() => setIsDialogOpen(true)}>
+                  <Plus className="mr-2 h-4 w-4" /> Thêm Sản Phẩm
+                </Button>
               </div>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Tên</TableHead>
-                    <TableHead>Phân Loại</TableHead>
-                    <TableHead>Loại</TableHead>
-                    <TableHead>Số Lượng</TableHead>
-                    <TableHead>Giá Đơn Vị</TableHead>
-                    <TableHead>Ngày Nhập</TableHead>
-                    <TableHead>Hóa Đơn</TableHead>
-                    <TableHead>Tổng Giá Trị</TableHead>
-                    <TableHead>Thao Tác</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {inventory.map((item) => (
-                    <TableRow key={item.id} className={item.quantity <= item.reorderPoint ? "bg-amber-50" : ""}>
-                      <TableCell>{item.name}</TableCell>
-                      <TableCell>{item.category}</TableCell>
-                      <TableCell>{item.type === 'consumable' ? 'Vật tư hao phí' : 'Thiết bị'}</TableCell>
-                      <TableCell className={item.quantity <= item.reorderPoint ? "text-red-600 font-medium" : ""}>
-                        {item.quantity} {item.unit} {item.quantity <= item.reorderPoint && "(Cần nhập thêm)"}
-                      </TableCell>
-                      <TableCell>{formatCurrency(item.unitPrice)}</TableCell>
-                      <TableCell>{item.importDate}</TableCell>
-                      <TableCell>
-                        {item.invoiceImage ? (
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => viewInvoiceImage(item.invoiceImage!)}
-                          >
-                            <ImageIcon className="h-4 w-4 mr-1" /> Xem
-                          </Button>
-                        ) : (
-                          <label className="cursor-pointer">
-                            <Input 
-                              type="file" 
-                              accept="image/*" 
-                              className="hidden" 
-                              onChange={(e) => handleImageUpload(e, item)}
-                            />
-                            <div className="flex items-center text-sm text-blue-500 hover:underline">
-                              <ImageIcon className="h-4 w-4 mr-1" /> Tải lên
-                            </div>
-                          </label>
-                        )}
-                      </TableCell>
-                      <TableCell>{formatCurrency(item.quantity * item.unitPrice)}</TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          <Button 
-                            variant="outline" 
-                            size="icon" 
-                            onClick={() => handleEditClick(item)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            variant="destructive" 
-                            size="icon"
-                            onClick={() => handleDeleteItem(item.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <InventoryTableAll
+                inventory={inventory}
+                formatCurrency={formatCurrency}
+                viewInvoiceImage={viewInvoiceImage}
+                handleImageUpload={handleImageUpload}
+                handleEditClick={handleEditClick}
+                handleDeleteItem={handleDeleteItem}
+              />
             </CardContent>
           </Card>
         </TabsContent>
-
         <TabsContent value="consumable">
           <Card>
             <CardHeader>
               <CardTitle>Vật Tư Hao Phí</CardTitle>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Tên</TableHead>
-                    <TableHead>Phân Loại</TableHead>
-                    <TableHead>Số Lượng</TableHead>
-                    <TableHead>Định Mức Sử Dụng</TableHead>
-                    <TableHead>Ngày Nhập</TableHead>
-                    <TableHead>Giá Đơn Vị</TableHead>
-                    <TableHead>Hóa Đơn</TableHead>
-                    <TableHead>Thao Tác</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {inventory.filter(item => item.type === 'consumable').map((item) => (
-                    <TableRow key={item.id} className={item.quantity <= item.reorderPoint ? "bg-amber-50" : ""}>
-                      <TableCell>{item.name}</TableCell>
-                      <TableCell>{item.category}</TableCell>
-                      <TableCell>{item.quantity} {item.unit}</TableCell>
-                      <TableCell>{item.usageRate}</TableCell>
-                      <TableCell>{item.importDate}</TableCell>
-                      <TableCell>{formatCurrency(item.unitPrice)}</TableCell>
-                      <TableCell>
-                        {item.invoiceImage ? (
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => viewInvoiceImage(item.invoiceImage!)}
-                          >
-                            <ImageIcon className="h-4 w-4 mr-1" /> Xem
-                          </Button>
-                        ) : (
-                          <label className="cursor-pointer">
-                            <Input 
-                              type="file" 
-                              accept="image/*" 
-                              className="hidden" 
-                              onChange={(e) => handleImageUpload(e, item)}
-                            />
-                            <div className="flex items-center text-sm text-blue-500 hover:underline">
-                              <ImageIcon className="h-4 w-4 mr-1" /> Tải lên
-                            </div>
-                          </label>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          <Button 
-                            variant="outline" 
-                            size="icon" 
-                            onClick={() => handleEditClick(item)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            variant="destructive" 
-                            size="icon"
-                            onClick={() => handleDeleteItem(item.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <InventoryTableConsumable
+                inventory={inventory}
+                formatCurrency={formatCurrency}
+                viewInvoiceImage={viewInvoiceImage}
+                handleImageUpload={handleImageUpload}
+                handleEditClick={handleEditClick}
+                handleDeleteItem={handleDeleteItem}
+              />
             </CardContent>
           </Card>
         </TabsContent>
-
         <TabsContent value="equipment">
           <Card>
             <CardHeader>
               <CardTitle>Thiết Bị</CardTitle>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Tên Thiết Bị</TableHead>
-                    <TableHead>Phân Loại</TableHead>
-                    <TableHead>Số Lượng</TableHead>
-                    <TableHead>Ngày Nhập</TableHead>
-                    <TableHead>Giá Trị</TableHead>
-                    <TableHead>Hóa Đơn</TableHead>
-                    <TableHead>Thao Tác</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {inventory.filter(item => item.type === 'equipment').map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell>{item.name}</TableCell>
-                      <TableCell>{item.category}</TableCell>
-                      <TableCell>{item.quantity} {item.unit}</TableCell>
-                      <TableCell>{item.importDate}</TableCell>
-                      <TableCell>{formatCurrency(item.unitPrice)}</TableCell>
-                      <TableCell>
-                        {item.invoiceImage ? (
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => viewInvoiceImage(item.invoiceImage!)}
-                          >
-                            <ImageIcon className="h-4 w-4 mr-1" /> Xem
-                          </Button>
-                        ) : (
-                          <label className="cursor-pointer">
-                            <Input 
-                              type="file" 
-                              accept="image/*" 
-                              className="hidden" 
-                              onChange={(e) => handleImageUpload(e, item)}
-                            />
-                            <div className="flex items-center text-sm text-blue-500 hover:underline">
-                              <ImageIcon className="h-4 w-4 mr-1" /> Tải lên
-                            </div>
-                          </label>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          <Button 
-                            variant="outline" 
-                            size="icon" 
-                            onClick={() => handleEditClick(item)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            variant="destructive" 
-                            size="icon"
-                            onClick={() => handleDeleteItem(item.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <InventoryTableEquipment
+                inventory={inventory}
+                formatCurrency={formatCurrency}
+                viewInvoiceImage={viewInvoiceImage}
+                handleImageUpload={handleImageUpload}
+                handleEditClick={handleEditClick}
+                handleDeleteItem={handleDeleteItem}
+              />
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
-
-      {/* Edit Item Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Chỉnh Sửa Sản Phẩm</DialogTitle>
-          </DialogHeader>
-          {editingItem && (
-            <div className="grid gap-4 py-4">
-              <Input 
-                placeholder="Tên sản phẩm" 
-                value={editingItem.name}
-                onChange={(e) => setEditingItem({...editingItem, name: e.target.value})}
-              />
-              <Input 
-                placeholder="Phân loại" 
-                value={editingItem.category}
-                onChange={(e) => setEditingItem({...editingItem, category: e.target.value})}
-              />
-              <Select
-                value={editingItem.type}
-                onValueChange={(value) => setEditingItem({...editingItem, type: value as 'consumable' | 'equipment'})}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Loại sản phẩm" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="consumable">Vật tư hao phí</SelectItem>
-                  <SelectItem value="equipment">Thiết bị</SelectItem>
-                </SelectContent>
-              </Select>
-              <Input 
-                type="number" 
-                placeholder="Số lượng" 
-                value={editingItem.quantity}
-                onChange={(e) => setEditingItem({...editingItem, quantity: Number(e.target.value)})}
-              />
-              <Input 
-                placeholder="Đơn vị" 
-                value={editingItem.unit}
-                onChange={(e) => setEditingItem({...editingItem, unit: e.target.value})}
-              />
-              <Input 
-                type="number" 
-                placeholder="Giá đơn vị (VNĐ)" 
-                value={editingItem.unitPrice}
-                onChange={(e) => setEditingItem({...editingItem, unitPrice: Number(e.target.value)})}
-              />
-              <Input 
-                type="number" 
-                placeholder="Mức cần đặt hàng" 
-                value={editingItem.reorderPoint}
-                onChange={(e) => setEditingItem({...editingItem, reorderPoint: Number(e.target.value)})}
-              />
-              <Input 
-                type="date" 
-                placeholder="Ngày nhập hàng" 
-                value={editingItem.importDate}
-                onChange={(e) => setEditingItem({...editingItem, importDate: e.target.value})}
-              />
-              {editingItem.type === 'consumable' && (
-                <Input 
-                  placeholder="Định mức sử dụng (vd: 0.2 Lít/xe)" 
-                  value={editingItem.usageRate || ''}
-                  onChange={(e) => setEditingItem({...editingItem, usageRate: e.target.value})}
-                />
-              )}
-              <div className="grid gap-2">
-                <label htmlFor="edit-invoice-image" className="text-sm font-medium">
-                  Hình ảnh hóa đơn nhập hàng
-                </label>
-                <Input 
-                  id="edit-invoice-image"
-                  type="file" 
-                  accept="image/*"
-                  onChange={(e) => handleImageUpload(e)}
-                />
-                {editingItem.invoiceImage && (
-                  <div className="mt-2">
-                    <p className="text-sm text-green-600 mb-1">Đã tải lên hình ảnh hóa đơn</p>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => viewInvoiceImage(editingItem.invoiceImage!)}
-                    >
-                      <ImageIcon className="h-4 w-4 mr-1" /> Xem hình ảnh
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Hủy</Button>
-            <Button onClick={handleEditSave}>Lưu Thay Đổi</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Image View Dialog */}
-      <Dialog open={isImageDialogOpen} onOpenChange={setIsImageDialogOpen}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>Hình Ảnh Hóa Đơn</DialogTitle>
-          </DialogHeader>
-          <div className="flex justify-center p-4">
-            {selectedInvoiceImage && (
-              <img 
-                src={selectedInvoiceImage} 
-                alt="Hóa đơn nhập hàng" 
-                className="max-w-full max-h-[70vh] object-contain"
-              />
-            )}
-          </div>
-          <DialogFooter>
-            <Button onClick={() => setIsImageDialogOpen(false)}>Đóng</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <InventoryAddEditDialog
+        open={isDialogOpen}
+        setOpen={setIsDialogOpen}
+        isEdit={false}
+        item={newItem}
+        setItem={setNewItem}
+        onSave={handleAddItem}
+        handleImageUpload={(e) => handleImageUpload(e)}
+      />
+      <InventoryAddEditDialog
+        open={isEditDialogOpen}
+        setOpen={setIsEditDialogOpen}
+        isEdit={true}
+        item={editingItem}
+        setItem={(item) => setEditingItem(item as InventoryItem)}
+        onSave={handleEditSave}
+        handleImageUpload={(e) => handleImageUpload(e)}
+      />
+      <InvoiceImageDialog
+        open={isImageDialogOpen}
+        setOpen={setIsImageDialogOpen}
+        image={selectedInvoiceImage}
+      />
     </div>
   );
 };
