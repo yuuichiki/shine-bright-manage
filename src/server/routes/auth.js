@@ -2,9 +2,11 @@
 import express from 'express';
 const router = express.Router();
 
-router.post('/login', async (req, res) => {
+// Login endpoint
+router.post('/', async (req, res) => {
   try {
     const { username, password } = req.body;
+    
     if (!(username && password)) {
       return res.status(400).json({ error: "Thiếu username hoặc password" });
     }
@@ -23,6 +25,7 @@ router.post('/login', async (req, res) => {
       token: "dummy-demo-token"
     });
   } catch (e) {
+    console.error("Login error:", e);
     return res.status(500).json({ error: e.message });
   }
 });

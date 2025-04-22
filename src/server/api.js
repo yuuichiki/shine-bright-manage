@@ -17,6 +17,12 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
+// Error handler middleware
+app.use((err, req, res, next) => {
+  console.error('API Error:', err);
+  res.status(500).json({ error: err.message || 'Internal Server Error' });
+});
+
 // Database connection middleware
 app.use(async (req, res, next) => {
   try {
@@ -29,12 +35,22 @@ app.use(async (req, res, next) => {
 });
 
 // Routes
-app.use('/api/login', authRoutes);
+app.use('/api/auth', authRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/customers', customersRoutes);
 app.use('/api/invoices', invoicesRoutes);
 app.use('/api/services', servicesRoutes);
 app.use('/api/batches', batchesRoutes);
+
+// Root endpoint for API health check
+app.get('/api', (req, res) => {
+  res.json({ status: 'API is running' });
+});
+
+// Catch-all route for 404 errors
+app.use('/api/*', (req, res) => {
+  res.status(404).json({ error: "API endpoint not found" });
+});
 
 // Start server
 app.listen(PORT, () => {

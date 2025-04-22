@@ -1,3 +1,5 @@
 
 import app from './api.js';
-console.log('API Server started with in-memory SQLite database');
+
+// Initialize and start the server
+console.log('API Server started with file-based SQLite database');
