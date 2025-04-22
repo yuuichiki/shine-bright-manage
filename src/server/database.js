@@ -1,6 +1,4 @@
 
-// Refactored database.js - main orchestrator for DB logic
-
 const path = require('path');
 const fs = require('fs');
 const initSqlJs = require('sql.js');
@@ -17,20 +15,46 @@ async function initializeDatabase() {
   try {
     // Initialize SQL.js
     SQL = await initSqlJs();
+    
+    const dbPath = path.join(__dirname, 'carwash.sqlite');
+    let dbExists = fs.existsSync(dbPath);
+    
+    // If database file exists, load it
+    if (dbExists) {
+      const fileBuffer = fs.readFileSync(dbPath);
+      db = new SQL.Database(fileBuffer);
+      console.log("Loaded existing SQLite database from file");
+    } else {
+      // Create a new database
+      db = new SQL.Database();
+      console.log("Created new SQLite database");
 
-    // Create a new database
-    db = new SQL.Database();
+      // Create tables
+      createTables(db);
+      
+      // Clear any existing sample data
+      clearSampleData(db);
+      
+      // Load sample data for testing
+      loadSampleData(db);
+      
+      // Save the initial database to file
+      const data = db.export();
+      const buffer = Buffer.from(data);
+      fs.writeFileSync(dbPath, buffer);
+      console.log("Saved initial database to file");
+    }
 
-    console.log("SQLite database initialized in memory");
-
-    // Create tables
-    createTables(db);
-
-    // Clear sample data before loading new demo
-    clearSampleData(db);
-
-    // Load sample data for testing
-    loadSampleData(db);
+    // Set up auto-save on changes
+    const originalRun = db.run;
+    db.run = function(sql, params) {
+      const result = originalRun.call(db, sql, params);
+      // Save database after each change
+      const data = db.export();
+      const buffer = Buffer.from(data);
+      fs.writeFileSync(dbPath, buffer);
+      return result;
+    };
 
     return db;
   } catch (error) {
