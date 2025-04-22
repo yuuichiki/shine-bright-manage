@@ -1,15 +1,15 @@
 
-const express = require('express');
-const cors = require('cors');
-const { getDb } = require('./database');
+import express from 'express';
+import cors from 'cors';
+import { getDb } from './database.js';
 
 // Import routes
-const authRoutes = require('./routes/auth');
-const inventoryRoutes = require('./routes/inventory');
-const customersRoutes = require('./routes/customers');
-const invoicesRoutes = require('./routes/invoices');
-const servicesRoutes = require('./routes/services');
-const batchesRoutes = require('./routes/batches');
+import authRoutes from './routes/auth.js';
+import inventoryRoutes from './routes/inventory.js';
+import customersRoutes from './routes/customers.js';
+import invoicesRoutes from './routes/invoices.js';
+import servicesRoutes from './routes/services.js';
+import batchesRoutes from './routes/batches.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -42,4 +42,4 @@ app.listen(PORT, () => {
   console.log(`API Server running on port ${PORT}`);
 });
 
-module.exports = app;
+export default app;

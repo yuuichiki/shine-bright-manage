@@ -1,5 +1,5 @@
 
-const express = require('express');
+import express from 'express';
 const router = express.Router();
 
 // Get inventory list
@@ -181,4 +181,4 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;
