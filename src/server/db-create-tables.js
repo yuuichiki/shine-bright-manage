@@ -186,4 +186,4 @@ function createTables(db) {
   console.log("Database tables created successfully");
 }
 
-module.exports = createTables;
+export default createTables;

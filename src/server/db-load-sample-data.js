@@ -85,5 +85,4 @@ function loadSampleData(db) {
 
   console.log('Sample data loaded successfully');
 }
-
-module.exports = loadSampleData;
+export default loadSampleData;

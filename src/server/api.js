@@ -1,8 +1,7 @@
 
 import express from 'express';
 import cors from 'cors';
-import { getDb } from './database.js';
-
+import getDb from './database.js';
 // Import routes
 import authRoutes from './routes/auth.js';
 import inventoryRoutes from './routes/inventory.js';

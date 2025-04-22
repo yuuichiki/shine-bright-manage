@@ -1,15 +1,17 @@
 
-const path = require('path');
-const fs = require('fs');
-const initSqlJs = require('sql.js');
+import path from 'path';
+import fs from 'fs';
+import initSqlJs from'sql.js';
 
-const createTables = require('./db-create-tables');
-const clearSampleData = require('./db-clear-sample-data');
-const loadSampleData = require('./db-load-sample-data');
+import createTables from './db-create-tables.js';
+import clearSampleData from './db-clear-sample-data.js';
+import loadSampleData from './db-load-sample-data.js';
+import { fileURLToPath } from 'url'; 
 
 let db;
 let SQL;
-
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 // Initialize the database
 async function initializeDatabase() {
   try {
@@ -124,14 +126,26 @@ function run(query, params = []) {
 let dbPromise = initializeDatabase();
 
 // Export a promise that resolves with the database interface
-module.exports = {
-  getDb: async () => {
-    await dbPromise;
-    return {
-      all,
-      get,
-      run,
-      exec: (query) => db.run(query)
-    };
-  }
+// module.exports = {
+//   getDb: async () => {
+//     await dbPromise;
+//     return {
+//       all,
+//       get,
+//       run,
+//       exec: (query) => db.run(query)
+//     };
+//   }
+// };
+
+const getDb = async () => {
+  await dbPromise;
+  return {
+    all,
+    get,
+    run,
+    exec: (query) => db.run(query),
+  };
 };
+
+export default getDb;

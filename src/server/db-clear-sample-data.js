@@ -16,4 +16,4 @@ function clearSampleData(db) {
   });
 }
 
-module.exports = clearSampleData;
+export default clearSampleData;
