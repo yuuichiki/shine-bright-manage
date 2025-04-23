@@ -21,6 +21,10 @@ export function useApi() {
     setLoading(true);
     setError(null);
 
+    // Ensure the URL starts with /api if it's a relative URL and doesn't already start with /api
+    const apiUrl = url.startsWith('http') ? url : 
+                 (url.startsWith('/api') ? url : `/api${url.startsWith('/') ? '' : '/'}${url}`);
+
     try {
       const options: RequestInit = {
         method,
@@ -34,7 +38,7 @@ export function useApi() {
         options.body = JSON.stringify(body);
       }
 
-      const response = await fetch(url, options);
+      const response = await fetch(apiUrl, options);
 
       if (!response.ok) {
         const errorData = await response.json();
