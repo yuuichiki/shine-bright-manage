@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { 
   Dialog, 
   DialogContent, 
@@ -31,6 +32,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Plus, Edit, Trash2 } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
 
 type Service = {
   id: number;
@@ -103,23 +105,101 @@ const Services = () => {
   const [newService, setNewService] = useState<Partial<Service>>({
     carTypeSpecificPrices: []
   });
+  const [editingService, setEditingService] = useState<Service | null>(null);
+  const [customPrices, setCustomPrices] = useState<{[key: number]: number}>({});
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const { toast } = useToast();
+
+  const initializeCustomPrices = (service: Partial<Service>) => {
+    const prices: {[key: number]: number} = {};
+    if (service.carTypeSpecificPrices) {
+      service.carTypeSpecificPrices.forEach(price => {
+        prices[price.carTypeId] = price.price;
+      });
+    } else if (service.basePrice) {
+      carCategories.forEach(category => {
+        prices[category.id] = Math.round((service.basePrice || 0) * category.serviceMultiplier / 1000) * 1000;
+      });
+    }
+    setCustomPrices(prices);
+  };
 
   const handleAddService = () => {
     if (newService.name && newService.category && newService.basePrice) {
+      const carTypeSpecificPrices = carCategories.map(category => ({
+        carTypeId: category.id,
+        price: customPrices[category.id] || Math.round((newService.basePrice || 0) * category.serviceMultiplier / 1000) * 1000
+      }));
+
       const serviceToAdd = {
         ...newService,
-        id: services.length + 1,
-        carTypeSpecificPrices: carCategories.map(category => ({
-          carTypeId: category.id,
-          price: Math.round((newService.basePrice || 0) * category.serviceMultiplier / 1000) * 1000 // Làm tròn đến 1000 VND
-        }))
+        id: Math.max(...services.map(s => s.id), 0) + 1,
+        carTypeSpecificPrices
       } as Service;
+
       setServices([...services, serviceToAdd]);
       setNewService({ carTypeSpecificPrices: [] });
+      setCustomPrices({});
       setIsDialogOpen(false);
+      toast({
+        title: "Thành công",
+        description: "Dịch vụ mới đã được thêm vào danh sách."
+      });
     }
+  };
+
+  const handleEditService = (service: Service) => {
+    setEditingService({ ...service });
+    initializeCustomPrices(service);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateService = () => {
+    if (editingService && editingService.name && editingService.category && editingService.basePrice) {
+      const carTypeSpecificPrices = carCategories.map(category => ({
+        carTypeId: category.id,
+        price: customPrices[category.id] || Math.round((editingService.basePrice || 0) * category.serviceMultiplier / 1000) * 1000
+      }));
+
+      const updatedService = {
+        ...editingService,
+        carTypeSpecificPrices
+      };
+
+      setServices(services.map(s => s.id === editingService.id ? updatedService : s));
+      setEditingService(null);
+      setCustomPrices({});
+      setIsEditDialogOpen(false);
+      toast({
+        title: "Thành công",
+        description: "Dịch vụ đã được cập nhật."
+      });
+    }
+  };
+
+  const handleDeleteService = (serviceId: number) => {
+    setServices(services.filter(s => s.id !== serviceId));
+    toast({
+      title: "Thành công",
+      description: "Dịch vụ đã được xóa khỏi danh sách."
+    });
+  };
+
+  const updateCustomPrice = (carTypeId: number, price: number) => {
+    setCustomPrices(prev => ({
+      ...prev,
+      [carTypeId]: price
+    }));
+  };
+
+  const resetPricesToDefault = (basePrice: number) => {
+    const newPrices: {[key: number]: number} = {};
+    carCategories.forEach(category => {
+      newPrices[category.id] = Math.round(basePrice * category.serviceMultiplier / 1000) * 1000;
+    });
+    setCustomPrices(newPrices);
   };
 
   const formatCurrency = (amount: number) => {
@@ -170,6 +250,37 @@ const Services = () => {
                     value={newService.duration || ''}
                     onChange={(e) => setNewService({...newService, duration: Number(e.target.value)})}
                   />
+                  {newService.basePrice && (
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <Label>Giá theo loại xe</Label>
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => resetPricesToDefault(newService.basePrice || 0)}
+                        >
+                          Tính lại giá tự động
+                        </Button>
+                      </div>
+                      {carCategories.map(category => (
+                        <div key={category.id} className="flex justify-between items-center">
+                          <Label className="text-sm">{category.name}:</Label>
+                          <Input
+                            type="number"
+                            className="w-32"
+                            value={customPrices[category.id] || Math.round((newService.basePrice || 0) * category.serviceMultiplier / 1000) * 1000}
+                            onChange={(e) => updateCustomPrice(category.id, Number(e.target.value))}
+                            onFocus={() => {
+                              if (!customPrices[category.id]) {
+                                updateCustomPrice(category.id, Math.round((newService.basePrice || 0) * category.serviceMultiplier / 1000) * 1000);
+                              }
+                            }}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   <Button onClick={handleAddService}>Lưu Dịch Vụ</Button>
                 </div>
               </DialogContent>
@@ -217,10 +328,10 @@ const Services = () => {
                   </TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
-                      <Button variant="outline" size="icon">
+                      <Button variant="outline" size="icon" onClick={() => handleEditService(service)}>
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="destructive" size="icon">
+                      <Button variant="destructive" size="icon" onClick={() => handleDeleteService(service.id)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -231,6 +342,69 @@ const Services = () => {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Edit Service Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Chỉnh Sửa Dịch Vụ</DialogTitle>
+            <DialogDescription>
+              Cập nhật thông tin dịch vụ và giá theo loại xe
+            </DialogDescription>
+          </DialogHeader>
+          {editingService && (
+            <div className="grid gap-4 py-4">
+              <Input 
+                placeholder="Tên dịch vụ" 
+                value={editingService.name || ''}
+                onChange={(e) => setEditingService({...editingService, name: e.target.value})}
+              />
+              <Input 
+                placeholder="Phân loại" 
+                value={editingService.category || ''}
+                onChange={(e) => setEditingService({...editingService, category: e.target.value})}
+              />
+              <Input 
+                type="number" 
+                placeholder="Giá cơ bản (VNĐ)" 
+                value={editingService.basePrice || ''}
+                onChange={(e) => setEditingService({...editingService, basePrice: Number(e.target.value)})}
+              />
+              <Input 
+                type="number" 
+                placeholder="Thời gian thực hiện (phút)" 
+                value={editingService.duration || ''}
+                onChange={(e) => setEditingService({...editingService, duration: Number(e.target.value)})}
+              />
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <Label>Giá theo loại xe</Label>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => resetPricesToDefault(editingService.basePrice || 0)}
+                  >
+                    Tính lại giá tự động
+                  </Button>
+                </div>
+                {carCategories.map(category => (
+                  <div key={category.id} className="flex justify-between items-center">
+                    <Label className="text-sm">{category.name}:</Label>
+                    <Input
+                      type="number"
+                      className="w-32"
+                      value={customPrices[category.id] || 0}
+                      onChange={(e) => updateCustomPrice(category.id, Number(e.target.value))}
+                    />
+                  </div>
+                ))}
+              </div>
+              <Button onClick={handleUpdateService}>Cập Nhật Dịch Vụ</Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

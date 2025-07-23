@@ -26,14 +26,21 @@ import {
 } from "@/components/ui/drawer";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/use-toast";
+import InvoicePDF from '@/components/InvoicePDF';
 
 type Invoice = {
   id: number;
   date: string;
-  customer: string;
-  customerPhone: string;
-  services: string;
-  serviceCount: number;
+  customer: {
+    name: string;
+    phone?: string;
+    address?: string;
+  };
+  services: {
+    name: string;
+    quantity: number;
+    price: number;
+  }[];
   total: number;
   status: 'paid' | 'pending' | 'cancelled';
   paymentMethod?: string;
@@ -44,10 +51,14 @@ const Invoices = () => {
     { 
       id: 1, 
       date: '2025-04-18', 
-      customer: 'Nguyễn Văn A', 
-      customerPhone: '0912345678',
-      services: 'Rửa xe cơ bản', 
-      serviceCount: 1,
+      customer: {
+        name: 'Nguyễn Văn A',
+        phone: '0912345678',
+        address: '123 Đường ABC, Quận 1, TP.HCM'
+      },
+      services: [
+        { name: 'Rửa xe cơ bản', quantity: 1, price: 250000 }
+      ],
       total: 250000,
       status: 'paid',
       paymentMethod: 'cash'
@@ -55,10 +66,15 @@ const Invoices = () => {
     { 
       id: 2, 
       date: '2025-04-18', 
-      customer: 'Trần Thị B', 
-      customerPhone: '0987654321',
-      services: 'Rửa xe + Thay dầu', 
-      serviceCount: 2,
+      customer: {
+        name: 'Trần Thị B',
+        phone: '0987654321',
+        address: '456 Đường XYZ, Quận 2, TP.HCM'
+      },
+      services: [
+        { name: 'Rửa xe cơ bản', quantity: 1, price: 250000 },
+        { name: 'Thay dầu máy', quantity: 1, price: 500000 }
+      ],
       total: 750000,
       status: 'paid',
       paymentMethod: 'transfer'
@@ -66,10 +82,14 @@ const Invoices = () => {
     { 
       id: 3, 
       date: '2025-04-17', 
-      customer: 'Phạm Văn C', 
-      customerPhone: '0977777777',
-      services: 'Đánh bóng toàn xe',
-      serviceCount: 1,
+      customer: {
+        name: 'Phạm Văn C',
+        phone: '0977777777',
+        address: '789 Đường DEF, Quận 3, TP.HCM'
+      },
+      services: [
+        { name: 'Đánh bóng toàn xe', quantity: 1, price: 1200000 }
+      ],
       total: 1200000,
       status: 'pending'
     },
@@ -104,8 +124,8 @@ const Invoices = () => {
   // Filter invoices based on search and filters
   const filteredInvoices = invoices.filter(invoice => {
     // Search filter
-    if (searchQuery && !invoice.customer.toLowerCase().includes(searchQuery.toLowerCase()) && 
-        !invoice.customerPhone.includes(searchQuery)) {
+    if (searchQuery && !invoice.customer.name.toLowerCase().includes(searchQuery.toLowerCase()) && 
+        !(invoice.customer.phone && invoice.customer.phone.includes(searchQuery))) {
       return false;
     }
 
@@ -216,18 +236,18 @@ const Invoices = () => {
                   <TableRow key={invoice.id}>
                     <TableCell>#{invoice.id}</TableCell>
                     <TableCell>{invoice.date}</TableCell>
-                    <TableCell>
-                      <div>{invoice.customer}</div>
-                      <div className="text-xs text-muted-foreground">{invoice.customerPhone}</div>
-                    </TableCell>
-                    <TableCell>
-                      {invoice.services}
-                      {invoice.serviceCount > 1 && (
-                        <span className="text-xs text-muted-foreground ml-1">
-                          +{invoice.serviceCount - 1} dịch vụ khác
-                        </span>
-                      )}
-                    </TableCell>
+                     <TableCell>
+                       <div>{invoice.customer.name}</div>
+                       <div className="text-xs text-muted-foreground">{invoice.customer.phone}</div>
+                     </TableCell>
+                     <TableCell>
+                       {invoice.services[0]?.name}
+                       {invoice.services.length > 1 && (
+                         <span className="text-xs text-muted-foreground ml-1">
+                           +{invoice.services.length - 1} dịch vụ khác
+                         </span>
+                       )}
+                     </TableCell>
                     <TableCell>{invoice.total.toLocaleString('vi-VN')} đ</TableCell>
                     <TableCell>
                       <Badge variant={
@@ -278,8 +298,11 @@ const Invoices = () => {
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
                   <h3 className="text-sm font-medium">Thông tin khách hàng</h3>
-                  <p className="text-sm">{selectedInvoice.customer}</p>
-                  <p className="text-sm">{selectedInvoice.customerPhone}</p>
+                  <p className="text-sm">{selectedInvoice.customer.name}</p>
+                  <p className="text-sm">{selectedInvoice.customer.phone}</p>
+                  {selectedInvoice.customer.address && (
+                    <p className="text-sm">{selectedInvoice.customer.address}</p>
+                  )}
                 </div>
                 <div>
                   <h3 className="text-sm font-medium">Thông tin hóa đơn</h3>
@@ -304,16 +327,13 @@ const Invoices = () => {
               </div>
               
               <h3 className="text-sm font-medium mb-2">Dịch vụ</h3>
-              <div className="border rounded-md p-3 mb-4">
-                <div className="flex justify-between mb-2">
-                  <span>{selectedInvoice.services}</span>
-                  <span>{selectedInvoice.total.toLocaleString('vi-VN')} đ</span>
-                </div>
-                {selectedInvoice.serviceCount > 1 && (
-                  <p className="text-xs text-muted-foreground">
-                    +{selectedInvoice.serviceCount - 1} dịch vụ khác (chi tiết được hiển thị trong hóa đơn đầy đủ)
-                  </p>
-                )}
+              <div className="border rounded-md p-3 mb-4 space-y-2">
+                {selectedInvoice.services.map((service, index) => (
+                  <div key={index} className="flex justify-between">
+                    <span>{service.name} x {service.quantity}</span>
+                    <span>{(service.price * service.quantity).toLocaleString('vi-VN')} đ</span>
+                  </div>
+                ))}
               </div>
               
               <div className="flex justify-between text-lg font-bold">
@@ -322,13 +342,8 @@ const Invoices = () => {
               </div>
             </div>
             <DrawerFooter>
-              <div className="flex justify-between">
-                <Button variant="outline" onClick={() => handlePrintInvoice(selectedInvoice.id)}>
-                  <Printer className="mr-2 h-4 w-4" /> In hóa đơn
-                </Button>
-                <Button onClick={() => handleExportInvoice(selectedInvoice.id)}>
-                  <Download className="mr-2 h-4 w-4" /> Xuất PDF
-                </Button>
+              <div className="mb-4">
+                <InvoicePDF invoice={selectedInvoice} />
               </div>
               <DrawerClose asChild>
                 <Button variant="outline">Đóng</Button>
