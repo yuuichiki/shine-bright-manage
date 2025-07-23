@@ -3,7 +3,6 @@ import express from 'express';
 import cors from 'cors';
 import getDb from './database.js';
 // Import routes
-import authRoutes from './routes/auth.js';
 import inventoryRoutes from './routes/inventory.js';
 import customersRoutes from './routes/customers.js';
 import invoicesRoutes from './routes/invoices.js';
@@ -35,7 +34,6 @@ app.use(async (req, res, next) => {
 });
 
 // Routes
-app.use('/api/auth', authRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/customers', customersRoutes);
 app.use('/api/invoices', invoicesRoutes);
