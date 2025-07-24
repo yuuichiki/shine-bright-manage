@@ -101,20 +101,210 @@ const Invoices = () => {
   const [dateFilter, setDateFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  const handleExportInvoice = (id: number) => {
-    console.log('Xuất hóa đơn:', id);
-    toast({
-      title: "Đang xuất hóa đơn",
-      description: `Đang chuẩn bị xuất hóa đơn #${id}`,
-    });
+  const handleExportInvoice = async (invoice: Invoice) => {
+    try {
+      // Create a temporary element for PDF generation
+      const tempDiv = document.createElement('div');
+      tempDiv.style.position = 'absolute';
+      tempDiv.style.left = '-9999px';
+      tempDiv.innerHTML = `
+        <div id="temp-invoice-${invoice.id}" style="width: 800px; padding: 40px; font-family: Arial, sans-serif;">
+          <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px;">
+            <div style="font-size: 24px; font-weight: bold; color: #333; margin-bottom: 5px;">TRUNG TÂM RỬA XE ABC</div>
+            <div style="font-size: 14px; color: #666;">
+              <div>Địa chỉ: 123 Đường ABC, Quận 1, TP.HCM</div>
+              <div>Điện thoại: (028) 1234 5678 | Email: info@carwash-abc.com</div>
+              <div>Mã số thuế: 0123456789</div>
+            </div>
+          </div>
+          
+          <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
+            <div style="flex: 1; margin-right: 20px;">
+              <div style="font-weight: bold; font-size: 16px; margin-bottom: 10px; color: #333;">THÔNG TIN HÓA ĐƠN</div>
+              <div style="margin-bottom: 5px;"><strong>Số hóa đơn:</strong> #${invoice.id}</div>
+              <div style="margin-bottom: 5px;"><strong>Ngày lập:</strong> ${new Date(invoice.date).toLocaleDateString('vi-VN')}</div>
+              <div style="margin-bottom: 5px;"><strong>Trạng thái:</strong> ${invoice.status === 'paid' ? 'Đã thanh toán' : invoice.status === 'pending' ? 'Chưa thanh toán' : 'Đã hủy'}</div>
+            </div>
+            
+            <div style="flex: 1;">
+              <div style="font-weight: bold; font-size: 16px; margin-bottom: 10px; color: #333;">THÔNG TIN KHÁCH HÀNG</div>
+              <div style="margin-bottom: 5px;"><strong>Tên khách hàng:</strong> ${invoice.customer.name}</div>
+              ${invoice.customer.phone ? `<div style="margin-bottom: 5px;"><strong>Số điện thoại:</strong> ${invoice.customer.phone}</div>` : ''}
+              ${invoice.customer.address ? `<div style="margin-bottom: 5px;"><strong>Địa chỉ:</strong> ${invoice.customer.address}</div>` : ''}
+            </div>
+          </div>
+
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
+            <thead>
+              <tr>
+                <th style="border: 1px solid #ddd; padding: 12px; text-align: left; background-color: #f5f5f5; font-weight: bold;">STT</th>
+                <th style="border: 1px solid #ddd; padding: 12px; text-align: left; background-color: #f5f5f5; font-weight: bold;">Tên dịch vụ</th>
+                <th style="border: 1px solid #ddd; padding: 12px; text-align: right; background-color: #f5f5f5; font-weight: bold;">Số lượng</th>
+                <th style="border: 1px solid #ddd; padding: 12px; text-align: right; background-color: #f5f5f5; font-weight: bold;">Đơn giá</th>
+                <th style="border: 1px solid #ddd; padding: 12px; text-align: right; background-color: #f5f5f5; font-weight: bold;">Thành tiền</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${invoice.services.map((service, index) => `
+                <tr>
+                  <td style="border: 1px solid #ddd; padding: 12px;">${index + 1}</td>
+                  <td style="border: 1px solid #ddd; padding: 12px;">${service.name}</td>
+                  <td style="border: 1px solid #ddd; padding: 12px; text-align: right;">${service.quantity}</td>
+                  <td style="border: 1px solid #ddd; padding: 12px; text-align: right;">${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(service.price)}</td>
+                  <td style="border: 1px solid #ddd; padding: 12px; text-align: right;">${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(service.price * service.quantity)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+
+          <div style="text-align: right; margin-top: 20px;">
+            <div style="font-size: 18px; font-weight: bold; color: #333;">
+              <strong>TỔNG CỘNG: ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(invoice.total)}</strong>
+            </div>
+          </div>
+
+          <div style="margin-top: 40px; text-align: center; font-size: 12px; color: #666; border-top: 1px solid #ddd; padding-top: 20px;">
+            <div>Cảm ơn quý khách đã sử dụng dịch vụ!</div>
+            <div>Hóa đơn được in lúc: ${new Date().toLocaleString('vi-VN')}</div>
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(tempDiv);
+      
+      const html2canvas = (await import('html2canvas')).default;
+      const jsPDF = (await import('jspdf')).default;
+      
+      const canvas = await html2canvas(tempDiv.querySelector(`#temp-invoice-${invoice.id}`) as HTMLElement, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      
+      const imgWidth = 210;
+      const pageHeight = 295;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      pdf.save(`hoa-don-${invoice.id}.pdf`);
+      
+      document.body.removeChild(tempDiv);
+      
+      toast({
+        title: "Thành công",
+        description: `Hóa đơn #${invoice.id} đã được xuất thành file PDF.`
+      });
+    } catch (error) {
+      toast({
+        title: "Lỗi",
+        description: "Không thể xuất hóa đơn ra PDF.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handlePrintInvoice = (id: number) => {
-    console.log('In hóa đơn:', id);
-    toast({
-      title: "Đang in hóa đơn",
-      description: `Đang gửi hóa đơn #${id} đến máy in`,
-    });
+  const handlePrintInvoice = (invoice: Invoice) => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Hóa đơn #${invoice.id}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+            .invoice-container { max-width: 800px; margin: 0 auto; }
+            .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px; }
+            .company-name { font-size: 24px; font-weight: bold; color: #333; margin-bottom: 5px; }
+            .company-info { font-size: 14px; color: #666; }
+            .invoice-details { display: flex; justify-content: space-between; margin-bottom: 30px; }
+            .invoice-info, .customer-info { flex: 1; }
+            .invoice-info { margin-right: 20px; }
+            .info-title { font-weight: bold; font-size: 16px; margin-bottom: 10px; color: #333; }
+            .info-item { margin-bottom: 5px; }
+            .services-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+            .services-table th, .services-table td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+            .services-table th { background-color: #f5f5f5; font-weight: bold; }
+            .services-table .text-right { text-align: right; }
+            .total-section { text-align: right; margin-top: 20px; }
+            .total-row { font-size: 18px; font-weight: bold; color: #333; }
+            .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #666; border-top: 1px solid #ddd; padding-top: 20px; }
+            @media print {
+              body { margin: 0; }
+              .no-print { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="invoice-container">
+            <div class="header">
+              <div class="company-name">TRUNG TÂM RỬA XE ABC</div>
+              <div class="company-info">
+                <div>Địa chỉ: 123 Đường ABC, Quận 1, TP.HCM</div>
+                <div>Điện thoại: (028) 1234 5678 | Email: info@carwash-abc.com</div>
+                <div>Mã số thuế: 0123456789</div>
+              </div>
+            </div>
+
+            <div class="invoice-details">
+              <div class="invoice-info">
+                <div class="info-title">THÔNG TIN HÓA ĐƠN</div>
+                <div class="info-item"><strong>Số hóa đơn:</strong> #${invoice.id}</div>
+                <div class="info-item"><strong>Ngày lập:</strong> ${new Date(invoice.date).toLocaleDateString('vi-VN')}</div>
+                <div class="info-item"><strong>Trạng thái:</strong> ${invoice.status === 'paid' ? 'Đã thanh toán' : invoice.status === 'pending' ? 'Chưa thanh toán' : 'Đã hủy'}</div>
+              </div>
+              
+              <div class="customer-info">
+                <div class="info-title">THÔNG TIN KHÁCH HÀNG</div>
+                <div class="info-item"><strong>Tên khách hàng:</strong> ${invoice.customer.name}</div>
+                ${invoice.customer.phone ? `<div class="info-item"><strong>Số điện thoại:</strong> ${invoice.customer.phone}</div>` : ''}
+                ${invoice.customer.address ? `<div class="info-item"><strong>Địa chỉ:</strong> ${invoice.customer.address}</div>` : ''}
+              </div>
+            </div>
+
+            <table class="services-table">
+              <thead>
+                <tr>
+                  <th>STT</th>
+                  <th>Tên dịch vụ</th>
+                  <th class="text-right">Số lượng</th>
+                  <th class="text-right">Đơn giá</th>
+                  <th class="text-right">Thành tiền</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${invoice.services.map((service, index) => `
+                  <tr>
+                    <td>${index + 1}</td>
+                    <td>${service.name}</td>
+                    <td class="text-right">${service.quantity}</td>
+                    <td class="text-right">${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(service.price)}</td>
+                    <td class="text-right">${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(service.price * service.quantity)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+
+            <div class="total-section">
+              <div class="total-row">
+                <strong>TỔNG CỘNG: ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(invoice.total)}</strong>
+              </div>
+            </div>
+
+            <div class="footer">
+              <div>Cảm ơn quý khách đã sử dụng dịch vụ!</div>
+              <div>Hóa đơn được in lúc: ${new Date().toLocaleString('vi-VN')}</div>
+            </div>
+          </div>
+        </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+    printWindow.print();
   };
 
   const viewInvoice = (invoice: Invoice) => {
@@ -264,10 +454,10 @@ const Invoices = () => {
                         <Button variant="outline" size="sm" onClick={() => viewInvoice(invoice)}>
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="sm" onClick={() => handleExportInvoice(invoice.id)}>
+                        <Button variant="outline" size="sm" onClick={() => handleExportInvoice(invoice)}>
                           <Download className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="sm" onClick={() => handlePrintInvoice(invoice.id)}>
+                        <Button variant="outline" size="sm" onClick={() => handlePrintInvoice(invoice)}>
                           <Printer className="h-4 w-4" />
                         </Button>
                       </div>

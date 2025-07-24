@@ -23,6 +23,7 @@ import {
   DialogTrigger,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { CalendarDays } from 'lucide-react';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 
 const DashboardMetricCard = ({ 
@@ -423,6 +424,16 @@ const Index = () => {
             <Link to="/reports" className="w-full">
               <Button variant="outline" className="w-full">
                 <BarChart className="mr-2 h-4 w-4" /> Báo Cáo & Thống Kê
+              </Button>
+            </Link>
+            <Link to="/expense-management" className="w-full">
+              <Button variant="outline" className="w-full">
+                <TrendingDown className="mr-2 h-4 w-4" /> Quản Lý Chi Phí
+              </Button>
+            </Link>
+            <Link to="/daily-dashboard" className="w-full">
+              <Button variant="outline" className="w-full">
+                <CalendarDays className="mr-2 h-4 w-4" /> Dashboard Hôm Nay
               </Button>
             </Link>
           </CardContent>
