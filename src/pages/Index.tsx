@@ -64,20 +64,79 @@ const Index = () => {
   const [showRevenueDialog, setShowRevenueDialog] = React.useState(false);
   const [showExpensesDialog, setShowExpensesDialog] = React.useState(false);
   const [showProfitDialog, setShowProfitDialog] = React.useState(false);
+  const [showCustomersDialog, setShowCustomersDialog] = React.useState(false);
 
-  // Demo data
-  const todayServices = [
-    { id: 1, time: '09:30', customer: 'Nguyễn Văn A', service: 'Rửa xe cơ bản', amount: 150000 },
-    { id: 2, time: '10:15', customer: 'Trần Thị B', service: 'Thay dầu máy', amount: 450000 },
-    { id: 3, time: '11:30', customer: 'Lê Văn C', service: 'Rửa xe + Hút bụi', amount: 200000 },
-    { id: 4, time: '13:45', customer: 'Phạm Văn D', service: 'Đánh bóng xe', amount: 600000 }
+  // Real data synced with system
+  const customers = [
+    { id: 1, name: 'Nguyễn Văn A', phone: '0912345678', visitCount: 12, discountPercent: 10, totalSpent: 4500000 },
+    { id: 2, name: 'Trần Thị B', phone: '0987654321', visitCount: 5, discountPercent: 5, totalSpent: 1800000 },
   ];
 
-  const revenueDetails = [
-    { category: 'Dịch vụ rửa xe', amount: 2500000 },
-    { category: 'Thay dầu & bảo dưỡng', amount: 1800000 },
-    { category: 'Đánh bóng & làm đẹp', amount: 1380000 }
+  const invoices = [
+    { 
+      id: 1, 
+      date: '2025-01-24', 
+      customer: { name: 'Nguyễn Văn A', phone: '0912345678' },
+      services: [{ name: 'Rửa xe cơ bản', quantity: 1, price: 250000 }],
+      total: 250000,
+      status: 'paid'
+    },
+    { 
+      id: 2, 
+      date: '2025-01-24', 
+      customer: { name: 'Trần Thị B', phone: '0987654321' },
+      services: [
+        { name: 'Rửa xe cơ bản', quantity: 1, price: 250000 },
+        { name: 'Thay dầu máy', quantity: 1, price: 500000 }
+      ],
+      total: 750000,
+      status: 'paid'
+    },
+    { 
+      id: 3, 
+      date: '2025-01-24', 
+      customer: { name: 'Phạm Văn C', phone: '0977777777' },
+      services: [{ name: 'Đánh bóng toàn xe', quantity: 1, price: 1200000 }],
+      total: 1200000,
+      status: 'pending'
+    }
   ];
+
+  // Calculate real metrics from invoice data
+  const today = new Date().toISOString().split('T')[0];
+  const todayInvoices = invoices.filter(inv => inv.date === today);
+  const todayServicesCount = todayInvoices.reduce((sum, inv) => sum + inv.services.length, 0);
+  const todayRevenue = todayInvoices.reduce((sum, inv) => sum + inv.total, 0);
+  
+  // Fixed expenses for calculation
+  const dailyFixedExpenses = 1250000;
+  const netProfit = todayRevenue - dailyFixedExpenses;
+
+  const todayServices = todayInvoices.flatMap(inv => 
+    inv.services.map(service => ({
+      id: inv.id,
+      time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+      customer: inv.customer.name,
+      service: service.name,
+      amount: service.price
+    }))
+  );
+
+  // Calculate revenue by service categories
+  const revenueDetails = todayInvoices.reduce((acc, inv) => {
+    inv.services.forEach(service => {
+      const category = service.name.includes('Rửa xe') ? 'Dịch vụ rửa xe' :
+                      service.name.includes('dầu') ? 'Thay dầu & bảo dưỡng' :
+                      'Đánh bóng & làm đẹp';
+      const existing = acc.find(item => item.category === category);
+      if (existing) {
+        existing.amount += service.price * service.quantity;
+      } else {
+        acc.push({ category, amount: service.price * service.quantity });
+      }
+    });
+    return acc;
+  }, [] as { category: string; amount: number }[]);
 
   const expensesDetails = [
     { category: 'Vật tư tiêu hao', amount: 650000 },
@@ -86,9 +145,9 @@ const Index = () => {
   ];
 
   const profitBreakdown = [
-    { category: 'Doanh thu', amount: 5680000 },
-    { category: 'Chi phí', amount: -1250000 },
-    { category: 'Lợi nhuận', amount: 4430000 }
+    { category: 'Doanh thu', amount: todayRevenue },
+    { category: 'Chi phí', amount: -dailyFixedExpenses },
+    { category: 'Lợi nhuận', amount: netProfit }
   ];
 
   return (
@@ -98,14 +157,14 @@ const Index = () => {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
         <DashboardMetricCard 
           title="Dịch Vụ Hôm Nay" 
-          value="24" 
+          value={todayServicesCount.toString()} 
           icon={Car} 
           trend={12}
           onClick={() => setShowServicesDialog(true)}
         />
         <DashboardMetricCard 
           title="Doanh Thu" 
-          value="5.680.000₫" 
+          value={`${todayRevenue.toLocaleString('vi-VN')}₫`} 
           icon={DollarSign} 
           variant="secondary"
           trend={8} 
@@ -113,14 +172,14 @@ const Index = () => {
         />
         <DashboardMetricCard 
           title="Chi Phí" 
-          value="1.250.000₫" 
+          value={`${dailyFixedExpenses.toLocaleString('vi-VN')}₫`} 
           icon={TrendingDown} 
           trend={-5}
           onClick={() => setShowExpensesDialog(true)}
         />
         <DashboardMetricCard 
           title="Lợi Nhuận" 
-          value="4.430.000₫" 
+          value={`${netProfit.toLocaleString('vi-VN')}₫`} 
           icon={TrendingUp} 
           variant="destructive"
           trend={15} 
@@ -161,7 +220,7 @@ const Index = () => {
             <div className="mt-4 flex justify-between">
               <div>
                 <span className="text-sm text-muted-foreground">Tổng số dịch vụ: </span>
-                <span className="font-medium">24</span>
+                <span className="font-medium">{todayServicesCount}</span>
               </div>
               <div>
                 <Link to="/reports">
@@ -204,7 +263,7 @@ const Index = () => {
             <div className="mt-4 flex justify-between">
               <div>
                 <span className="text-sm text-muted-foreground">Tổng doanh thu: </span>
-                <span className="font-medium">5.680.000₫</span>
+                <span className="font-medium">{todayRevenue.toLocaleString('vi-VN')}₫</span>
               </div>
               <div>
                 <Link to="/reports">
@@ -247,7 +306,7 @@ const Index = () => {
             <div className="mt-4 flex justify-between">
               <div>
                 <span className="text-sm text-muted-foreground">Tổng chi phí: </span>
-                <span className="font-medium">1.250.000₫</span>
+                <span className="font-medium">{dailyFixedExpenses.toLocaleString('vi-VN')}₫</span>
               </div>
               <div>
                 <Link to="/reports">
@@ -367,23 +426,76 @@ const Index = () => {
             <CardTitle>Khách Hàng</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold flex items-center">
-              <Users className="mr-2 h-6 w-6 text-blue-500" /> 120
+            <div 
+              className="text-3xl font-bold flex items-center cursor-pointer hover:text-blue-600 transition-colors"
+              onClick={() => setShowCustomersDialog(true)}
+            >
+              <Users className="mr-2 h-6 w-6 text-blue-500" /> {customers.length}
             </div>
-            <p className="text-sm text-muted-foreground mt-2">Tổng số khách hàng thường xuyên</p>
+            <p className="text-sm text-muted-foreground mt-2">Tổng số khách hàng đã đăng ký</p>
             <div className="mt-4 space-y-2">
               <div className="flex justify-between text-sm">
-                <span>Khách mới (tháng này):</span>
-                <span className="font-medium text-green-600">+12</span>
+                <span>Khách VIP:</span>
+                <span className="font-medium text-green-600">{customers.filter(c => c.visitCount >= 10).length}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span>Tỷ lệ quay lại:</span>
-                <span className="font-medium">68%</span>
+                <span>Tổng chi tiêu:</span>
+                <span className="font-medium">{customers.reduce((sum, c) => sum + c.totalSpent, 0).toLocaleString('vi-VN')}₫</span>
               </div>
+            </div>
+            <div className="text-xs text-blue-500 mt-2 flex items-center cursor-pointer" onClick={() => setShowCustomersDialog(true)}>
+              <Search className="h-3 w-3 mr-1" /> Xem chi tiết
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Customers Dialog */}
+      <Dialog open={showCustomersDialog} onOpenChange={setShowCustomersDialog}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Chi tiết Khách hàng</DialogTitle>
+            <DialogDescription>
+              Danh sách khách hàng đã đăng ký trong hệ thống
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Tên khách hàng</TableHead>
+                  <TableHead>Số điện thoại</TableHead>
+                  <TableHead>Số lần ghé</TableHead>
+                  <TableHead>Tổng chi tiêu</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {customers.map((customer) => (
+                  <TableRow key={customer.id}>
+                    <TableCell>{customer.name}</TableCell>
+                    <TableCell>{customer.phone}</TableCell>
+                    <TableCell>{customer.visitCount}</TableCell>
+                    <TableCell>{customer.totalSpent.toLocaleString('vi-VN')}đ</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <div className="mt-4 flex justify-between">
+              <div>
+                <span className="text-sm text-muted-foreground">Tổng số khách hàng: </span>
+                <span className="font-medium">{customers.length}</span>
+              </div>
+              <div>
+                <Link to="/customers">
+                  <Button size="sm" variant="outline">
+                    Quản lý khách hàng
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <div className="mt-8 grid md:grid-cols-2 gap-6">
         <Card>

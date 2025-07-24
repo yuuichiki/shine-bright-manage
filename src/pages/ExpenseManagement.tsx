@@ -58,8 +58,32 @@ const ExpenseManagement = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
-  // Mock daily revenue for calculation
-  const todayRevenue = 2500000; // Example revenue
+  // Real daily revenue from invoices
+  const invoices = [
+    { 
+      id: 1, 
+      date: '2025-01-24', 
+      total: 250000,
+      status: 'paid'
+    },
+    { 
+      id: 2, 
+      date: '2025-01-24', 
+      total: 750000,
+      status: 'paid'
+    },
+    { 
+      id: 3, 
+      date: '2025-01-24', 
+      total: 1200000,
+      status: 'pending'
+    }
+  ];
+
+  const today = new Date().toISOString().split('T')[0];
+  const todayRevenue = invoices
+    .filter(inv => inv.date === today && inv.status === 'paid')
+    .reduce((sum, inv) => sum + inv.total, 0);
 
   const handleAddExpense = () => {
     if (newExpense.name && newExpense.amount && newExpense.type && newExpense.frequency) {
