@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import NavigationMenu from '@/components/NavigationMenu';
 import { 
   Card, 
   CardContent, 
@@ -33,7 +34,6 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Edit, Trash2, Calculator, Package, Zap, Users, Home } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
-import NavigationMenu from '@/components/NavigationMenu';
 
 type CostComponent = {
   id: number;
@@ -229,8 +229,10 @@ const ServiceCostManagement = () => {
   };
 
   return (
+    <>
+    <NavigationMenu />
     <div className="min-h-screen bg-background">
-      <NavigationMenu />
+      
       
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-6">
@@ -536,6 +538,7 @@ const ServiceCostManagement = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

@@ -1,5 +1,6 @@
 
 import React from 'react';
+import NavigationMenu from '@/components/NavigationMenu';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
@@ -151,6 +152,8 @@ const Index = () => {
   ];
 
   return (
+    <>
+    <NavigationMenu />
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6">Phần Mềm Quản Lý Rửa Xe</h1>
       
@@ -583,6 +586,7 @@ const Index = () => {
         </Card>
       </div>
     </div>
+    </>
   );
 };
 

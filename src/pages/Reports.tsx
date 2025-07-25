@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import NavigationMenu from '@/components/NavigationMenu';
 import { 
   Card, 
   CardContent, 
@@ -90,6 +91,8 @@ const Reports = () => {
   };
 
   return (
+    <>
+    <NavigationMenu />
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6">Báo Cáo & Thống Kê</h1>
       
@@ -362,6 +365,7 @@ const Reports = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

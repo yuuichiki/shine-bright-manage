@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import NavigationMenu from '@/components/NavigationMenu';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle, Plus } from 'lucide-react';
 import {
@@ -110,6 +111,8 @@ const Inventory = () => {
   const lowStockItems = getLowStockItems();
 
   return (
+    <>
+    <NavigationMenu />
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6">Quản Lý Kho Hàng</h1>
 
@@ -212,6 +215,7 @@ const Inventory = () => {
         image={selectedInvoiceImage}
       />
     </div>
+    </>
   );
 };
 

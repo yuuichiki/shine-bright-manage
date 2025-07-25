@@ -85,7 +85,7 @@ const InvoicePDF: React.FC<InvoicePDFProps> = ({ invoice }) => {
     printWindow.document.write(`
       <html>
         <head>
-          <title>Hóa đơn #${invoice.id}</title>
+          <title>Hóa đơn ${invoice.id}</title>
           <style>
             body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
             .invoice-container { max-width: 800px; margin: 0 auto; }
@@ -143,10 +143,10 @@ const InvoicePDF: React.FC<InvoicePDFProps> = ({ invoice }) => {
 
       <div id={`invoice-${invoice.id}`} className="invoice-container bg-white p-8 rounded-lg shadow-lg">
         <div className="header">
-          <div className="company-name">TRUNG TÂM RỬA XE ABC</div>
+          <div className="company-name">TRUNG TÂM CHĂM SÓC XE K-AUTO</div>
           <div className="company-info">
-            <div>Địa chỉ: 123 Đường ABC, Quận 1, TP.HCM</div>
-            <div>Điện thoại: (028) 1234 5678 | Email: info@carwash-abc.com</div>
+            <div>Địa chỉ: Máng Nước,Thôn Vân Tra, An Đồng, An Dương, Hải Phòng, Việt Nam</div>
+            <div>Điện thoại: (84) 1234 5678 | Email: k-auto@car.com</div>
             <div>Mã số thuế: 0123456789</div>
           </div>
         </div>
@@ -200,7 +200,7 @@ const InvoicePDF: React.FC<InvoicePDFProps> = ({ invoice }) => {
           </div>
         </div>
 
-        <div className="footer">
+        <div className="footer" style={{ textAlign: 'left' }}>
           <div>Cảm ơn quý khách đã sử dụng dịch vụ!</div>
           <div>Hóa đơn được in lúc: {new Date().toLocaleString('vi-VN')}</div>
         </div>

@@ -1,5 +1,5 @@
-
 import React, { useState } from 'react';
+import NavigationMenu from '@/components/NavigationMenu';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
@@ -337,6 +337,8 @@ const Invoices = () => {
   });
 
   return (
+    <>
+    <NavigationMenu />
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Quản lý Hóa đơn</h1>
@@ -543,6 +545,7 @@ const Invoices = () => {
         </Drawer>
       )}
     </div>
+    </>
   );
 };
 

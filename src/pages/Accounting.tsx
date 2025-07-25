@@ -4,9 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calculator, FileText, BarChart, Receipt } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import NavigationMenu from '@/components/NavigationMenu';
 
 const Accounting = () => {
+
   return (
+    <>
+    <NavigationMenu />
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6">Quản Lý Kế Toán</h1>
       
@@ -66,6 +70,7 @@ const Accounting = () => {
         </Card>
       </div>
     </div>
+    </>
   );
 };
 

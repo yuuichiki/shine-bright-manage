@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import NavigationMenu from '@/components/NavigationMenu';
 import { 
   Card, 
   CardContent, 
@@ -69,6 +70,8 @@ const PriceHistory = () => {
   };
 
   return (
+     <>
+        <NavigationMenu />
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6">Price History</h1>
 
@@ -141,6 +144,7 @@ const PriceHistory = () => {
         </CardContent>
       </Card>
     </div>
+    </>
   );
 };
 

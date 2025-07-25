@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import NavigationMenu from '@/components/NavigationMenu';
 import { 
   Card, 
   CardContent, 
@@ -77,6 +78,8 @@ const CarCategories = () => {
   };
 
   return (
+    <>
+    <NavigationMenu />
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6">Quản Lý Danh Mục Xe</h1>
 
@@ -180,6 +183,7 @@ const CarCategories = () => {
         </CardContent>
       </Card>
     </div>
+    </>
   );
 };
 
