@@ -22,6 +22,7 @@ import Purchasing from "./pages/Purchasing"; // New purchasing module
 import Batches from "./pages/Batches"; // New batches management
 import ExpenseManagement from "./pages/ExpenseManagement"; // New expense management
 import DailyDashboard from "./pages/DailyDashboard"; // New daily dashboard
+import ServiceCostManagement from "./pages/ServiceCostManagement"; // New service cost management
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -45,6 +46,7 @@ const App = () => (
           <Route path="/batches" element={<Batches />} />
           <Route path="/expense-management" element={<ExpenseManagement />} />
           <Route path="/daily-dashboard" element={<DailyDashboard />} />
+          <Route path="/service-cost-management" element={<ServiceCostManagement />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
