@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import NavigationMenu from '@/components/NavigationMenu';
 import { 
   Card, 
   CardContent, 
@@ -170,8 +171,10 @@ const ExpenseManagement = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">Quản Lý Chi Phí</h1>
+    <>
+      <NavigationMenu />
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold mb-6">Quản Lý Chi Phí</h1>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -399,7 +402,8 @@ const ExpenseManagement = () => {
           </Table>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </>
   );
 };
 

@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import NavigationMenu from '@/components/NavigationMenu';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -79,8 +80,10 @@ const Batches = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">Quản Lý Lô Hàng</h1>
+    <>
+      <NavigationMenu />
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold mb-6">Quản Lý Lô Hàng</h1>
       
       <Card>
         <CardHeader>
@@ -276,7 +279,8 @@ const Batches = () => {
           </Table>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </>
   );
 };
 

@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import NavigationMenu from '@/components/NavigationMenu';
 import { 
   Card, 
   CardContent, 
@@ -32,7 +33,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { Plus, Edit, Trash2, AlertCircle, ImageIcon, Loader2 } from 'lucide-react';
+import { Plus, Edit, Trash2, AlertCircle, ImageIcon, Loader2, FileDown } from 'lucide-react';
 import { 
   Tabs, 
   TabsContent, 
@@ -260,8 +261,10 @@ const EnhancedInventory = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">Quản Lý Kho Hàng (SQLite)</h1>
+    <>
+      <NavigationMenu />
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold mb-6">Quản Lý Kho Hàng (SQLite)</h1>
 
       {isLoading ? (
         <div className="flex justify-center items-center h-64">
@@ -293,12 +296,17 @@ const EnhancedInventory = () => {
                 <CardHeader>
                   <div className="flex justify-between items-center">
                     <CardTitle>Danh Sách Hàng Tồn Kho</CardTitle>
-                    <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                      <DialogTrigger asChild>
-                        <Button>
-                          <Plus className="mr-2 h-4 w-4" /> Thêm Sản Phẩm
-                        </Button>
-                      </DialogTrigger>
+                    <div className="flex gap-2">
+                      <Button variant="outline">
+                        <FileDown className="mr-2 h-4 w-4" />
+                        Xuất Báo Cáo
+                      </Button>
+                      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                        <DialogTrigger asChild>
+                          <Button>
+                            <Plus className="mr-2 h-4 w-4" /> Thêm Sản Phẩm
+                          </Button>
+                        </DialogTrigger>
                       <DialogContent>
                         <DialogHeader>
                           <DialogTitle>Thêm Sản Phẩm Mới</DialogTitle>
@@ -406,6 +414,7 @@ const EnhancedInventory = () => {
                         </div>
                       </DialogContent>
                     </Dialog>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -755,7 +764,8 @@ const EnhancedInventory = () => {
           </Dialog>
         </>
       )}
-    </div>
+      </div>
+    </>
   );
 };
 
