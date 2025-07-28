@@ -15,7 +15,9 @@ import {
   CalendarDays,
   TrendingUp,
   Archive,
-  ChevronDown
+  ChevronDown,
+  Tag,
+  Ticket
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -71,6 +73,14 @@ const navigationGroups = [
     items: [
       { name: 'Kế toán', path: '/accounting', icon: Calculator },
       { name: 'Quản lý chi phí', path: '/expense-management', icon: DollarSign },
+    ]
+  },
+  {
+    name: 'Marketing',
+    items: [
+      { name: 'Khuyến mãi', path: '/promotions', icon: Tag },
+      { name: 'Nhóm khách hàng', path: '/customer-groups', icon: Users },
+      { name: 'Voucher', path: '/vouchers', icon: Ticket },
     ]
   },
 ];

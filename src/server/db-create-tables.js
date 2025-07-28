@@ -183,6 +183,77 @@ function createTables(db) {
     );
   `);
 
+  // Bảng nhóm khách hàng tiềm năng
+  db.run(`
+    CREATE TABLE IF NOT EXISTS customer_groups (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      description TEXT,
+      criteria TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  // Bảng khuyến mãi
+  db.run(`
+    CREATE TABLE IF NOT EXISTS promotions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      description TEXT,
+      type TEXT NOT NULL,
+      discount_type TEXT NOT NULL,
+      discount_value REAL NOT NULL,
+      min_purchase_amount REAL DEFAULT 0,
+      max_discount_amount REAL,
+      start_date TEXT NOT NULL,
+      end_date TEXT NOT NULL,
+      is_active BOOLEAN DEFAULT 1,
+      usage_limit INTEGER,
+      used_count INTEGER DEFAULT 0,
+      applicable_products TEXT,
+      applicable_services TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  // Bảng voucher
+  db.run(`
+    CREATE TABLE IF NOT EXISTS vouchers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      code TEXT NOT NULL UNIQUE,
+      promotion_id INTEGER,
+      customer_id INTEGER,
+      customer_group_id INTEGER,
+      discount_type TEXT NOT NULL,
+      discount_value REAL NOT NULL,
+      min_purchase_amount REAL DEFAULT 0,
+      max_discount_amount REAL,
+      valid_from TEXT NOT NULL,
+      valid_until TEXT NOT NULL,
+      is_used BOOLEAN DEFAULT 0,
+      used_date TEXT,
+      used_invoice_id INTEGER,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (promotion_id) REFERENCES promotions (id),
+      FOREIGN KEY (customer_id) REFERENCES customers (id),
+      FOREIGN KEY (customer_group_id) REFERENCES customer_groups (id),
+      FOREIGN KEY (used_invoice_id) REFERENCES invoices (id)
+    );
+  `);
+
+  // Bảng liên kết khách hàng với nhóm
+  db.run(`
+    CREATE TABLE IF NOT EXISTS customer_group_members (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      customer_id INTEGER NOT NULL,
+      customer_group_id INTEGER NOT NULL,
+      assigned_date TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (customer_id) REFERENCES customers (id),
+      FOREIGN KEY (customer_group_id) REFERENCES customer_groups (id),
+      UNIQUE(customer_id, customer_group_id)
+    );
+  `);
+
   console.log("Database tables created successfully");
 }
 
