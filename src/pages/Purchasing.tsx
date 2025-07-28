@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,51 +10,156 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import NavigationMenu from '@/components/NavigationMenu';
+import useApi from '@/hooks/useApi';
+import ImageUpload from '@/components/ImageUpload';
+import { generatePDFReport, downloadPDF, formatCurrency } from '@/utils/pdfGenerator';
 
 const Purchasing = () => {
-  const [suppliers, setSuppliers] = useState([
-    { id: 1, name: 'Công ty ABC', contact: '0123456789', address: 'Hà Nội', email: 'abc@email.com' },
-    { id: 2, name: 'Công ty XYZ', contact: '0987654321', address: 'TP.HCM', email: 'xyz@email.com' }
-  ]);
-  const [orders, setOrders] = useState([
-    { id: 1, supplierId: 1, orderDate: '2024-07-20', totalAmount: 5000000, status: 'Đang chờ' },
-    { id: 2, supplierId: 2, orderDate: '2024-07-18', totalAmount: 3000000, status: 'Đã giao' }
-  ]);
-  
-  const [newSupplier, setNewSupplier] = useState({ name: '', contact: '', address: '', email: '' });
-  const [newOrder, setNewOrder] = useState({ supplierId: 0, totalAmount: 0, status: 'Đang chờ' });
+  const [suppliers, setSuppliers] = useState<any[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [newSupplier, setNewSupplier] = useState({ name: '', contact: '', phone: '', address: '', email: '' });
+  const [newOrder, setNewOrder] = useState({ supplier_id: 0, total_amount: 0, status: 'Đang chờ', packaging_images: [], notes: '' });
   const [isSupplierDialogOpen, setIsSupplierDialogOpen] = useState(false);
   const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
+  const [editingSupplier, setEditingSupplier] = useState(null);
+  const [editingOrder, setEditingOrder] = useState(null);
   const { toast } = useToast();
+  const { callApi } = useApi();
 
-  const handleAddSupplier = () => {
+  useEffect(() => {
+    loadSuppliers();
+    loadOrders();
+  }, []);
+
+  const loadSuppliers = async () => {
+    const data = await callApi({ url: '/suppliers' });
+    if (data && Array.isArray(data)) setSuppliers(data);
+  };
+
+  const loadOrders = async () => {
+    const data = await callApi({ url: '/purchase-orders' });
+    if (data && Array.isArray(data)) setOrders(data);
+  };
+
+  const handleAddSupplier = async () => {
     if (newSupplier.name && newSupplier.contact) {
-      const supplier = { ...newSupplier, id: Date.now() };
-      setSuppliers([...suppliers, supplier]);
-      setNewSupplier({ name: '', contact: '', address: '', email: '' });
-      setIsSupplierDialogOpen(false);
-      toast({ title: "Thành công", description: "Nhà cung cấp đã được thêm." });
+      const data = await callApi({
+        url: '/suppliers',
+        method: 'POST',
+        body: newSupplier
+      });
+      if (data) {
+        setSuppliers([...suppliers, data]);
+        setNewSupplier({ name: '', contact: '', phone: '', address: '', email: '' });
+        setIsSupplierDialogOpen(false);
+        toast({ title: "Thành công", description: "Nhà cung cấp đã được thêm." });
+      }
     }
   };
 
-  const handleDeleteSupplier = (id: number) => {
-    setSuppliers(suppliers.filter(s => s.id !== id));
-    toast({ title: "Thành công", description: "Nhà cung cấp đã được xóa." });
-  };
-
-  const handleAddOrder = () => {
-    if (newOrder.supplierId && newOrder.totalAmount) {
-      const order = { ...newOrder, id: Date.now(), orderDate: new Date().toISOString().split('T')[0] };
-      setOrders([...orders, order]);
-      setNewOrder({ supplierId: 0, totalAmount: 0, status: 'Đang chờ' });
-      setIsOrderDialogOpen(false);
-      toast({ title: "Thành công", description: "Đơn đặt hàng đã được tạo." });
+  const handleEditSupplier = async () => {
+    if (editingSupplier && editingSupplier.name && editingSupplier.contact) {
+      const data = await callApi({
+        url: `/suppliers/${editingSupplier.id}`,
+        method: 'PUT',
+        body: editingSupplier
+      });
+      if (data) {
+        setSuppliers(suppliers.map(s => s.id === editingSupplier.id ? data : s));
+        setEditingSupplier(null);
+        toast({ title: "Thành công", description: "Nhà cung cấp đã được cập nhật." });
+      }
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+  const handleDeleteSupplier = async (id: number) => {
+    const success = await callApi({
+      url: `/suppliers/${id}`,
+      method: 'DELETE'
+    });
+    if (success) {
+      setSuppliers(suppliers.filter(s => s.id !== id));
+      toast({ title: "Thành công", description: "Nhà cung cấp đã được xóa." });
+    }
   };
+
+  const handleAddOrder = async () => {
+    if (newOrder.supplier_id && newOrder.total_amount) {
+      const data = await callApi({
+        url: '/purchase-orders',
+        method: 'POST',
+        body: newOrder
+      });
+      if (data) {
+        setOrders([...orders, data]);
+        setNewOrder({ supplier_id: 0, total_amount: 0, status: 'Đang chờ', packaging_images: [], notes: '' });
+        setIsOrderDialogOpen(false);
+        toast({ title: "Thành công", description: "Đơn đặt hàng đã được tạo." });
+      }
+    }
+  };
+
+  const handleEditOrder = async () => {
+    if (editingOrder && editingOrder.supplier_id && editingOrder.total_amount) {
+      const data = await callApi({
+        url: `/purchase-orders/${editingOrder.id}`,
+        method: 'PUT',
+        body: editingOrder
+      });
+      if (data) {
+        setOrders(orders.map(o => o.id === editingOrder.id ? data : o));
+        setEditingOrder(null);
+        toast({ title: "Thành công", description: "Đơn đặt hàng đã được cập nhật." });
+      }
+    }
+  };
+
+  const handleDeleteOrder = async (id: number) => {
+    const success = await callApi({
+      url: `/purchase-orders/${id}`,
+      method: 'DELETE'
+    });
+    if (success) {
+      setOrders(orders.filter(o => o.id !== id));
+      toast({ title: "Thành công", description: "Đơn đặt hàng đã được xóa." });
+    }
+  };
+
+  const exportSuppliersReport = () => {
+    const reportData = {
+      title: 'Báo Cáo Nhà Cung Cấp',
+      headers: ['Tên công ty', 'Liên hệ', 'Điện thoại', 'Email', 'Địa chỉ'],
+      data: suppliers.map(s => [s.name, s.contact, s.phone || '', s.email || '', s.address || '']),
+      summary: [
+        { label: 'Tổng số nhà cung cấp', value: suppliers.length.toString() }
+      ]
+    };
+    
+    const doc = generatePDFReport(reportData);
+    downloadPDF(doc, 'bao_cao_nha_cung_cap');
+  };
+
+  const exportOrdersReport = () => {
+    const reportData = {
+      title: 'Báo Cáo Đơn Đặt Hàng',
+      headers: ['Mã đơn', 'Nhà cung cấp', 'Ngày đặt', 'Tổng giá trị', 'Trạng thái'],
+      data: orders.map(o => [
+        `DH${o.id}`,
+        suppliers.find(s => s.id === o.supplier_id)?.name || '',
+        o.order_date,
+        formatCurrency(o.total_amount),
+        o.status
+      ]),
+      summary: [
+        { label: 'Tổng số đơn hàng', value: orders.length.toString() },
+        { label: 'Tổng giá trị', value: formatCurrency(orders.reduce((sum, o) => sum + o.total_amount, 0)) }
+      ]
+    };
+    
+    const doc = generatePDFReport(reportData);
+    downloadPDF(doc, 'bao_cao_don_dat_hang');
+  };
+
 
   return (
     <>
@@ -135,13 +240,23 @@ const Purchasing = () => {
                       <div className="grid gap-4 py-4">
                         <select 
                           className="p-2 border rounded" 
-                          value={newOrder.supplierId} 
-                          onChange={(e) => setNewOrder({...newOrder, supplierId: Number(e.target.value)})}
+                          value={newOrder.supplier_id} 
+                          onChange={(e) => setNewOrder({...newOrder, supplier_id: Number(e.target.value)})}
                         >
                           <option value={0}>Chọn nhà cung cấp</option>
                           {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                         </select>
-                        <Input type="number" placeholder="Tổng giá trị" value={newOrder.totalAmount} onChange={(e) => setNewOrder({...newOrder, totalAmount: Number(e.target.value)})} />
+                        <Input type="number" placeholder="Tổng giá trị" value={newOrder.total_amount} onChange={(e) => setNewOrder({...newOrder, total_amount: Number(e.target.value)})} />
+                        <Input placeholder="Ghi chú" value={newOrder.notes} onChange={(e) => setNewOrder({...newOrder, notes: e.target.value})} />
+                        
+                        <div>
+                          <label className="block text-sm font-medium mb-2">Ảnh chụp đóng gói (tối đa 6 ảnh/video)</label>
+                          <ImageUpload 
+                            images={newOrder.packaging_images} 
+                            onImagesChange={(images) => setNewOrder({...newOrder, packaging_images: images})}
+                            maxImages={6}
+                          />
+                        </div>
                         <select 
                           className="p-2 border rounded" 
                           value={newOrder.status} 
@@ -155,7 +270,8 @@ const Purchasing = () => {
                       </div>
                     </DialogContent>
                   </Dialog>
-                  <Button variant="outline"><FileDown className="mr-2 h-4 w-4" />Xuất Báo Cáo</Button>
+                  <Button variant="outline" onClick={exportSuppliersReport}><FileDown className="mr-2 h-4 w-4" />Xuất BC Nhà CC</Button>
+                  <Button variant="outline" onClick={exportOrdersReport}><FileDown className="mr-2 h-4 w-4" />Xuất BC Đơn Hàng</Button>
                 </div>
               </div>
             </CardHeader>
@@ -168,23 +284,34 @@ const Purchasing = () => {
                     <TableHead>Ngày đặt</TableHead>
                     <TableHead>Tổng giá trị</TableHead>
                     <TableHead>Trạng thái</TableHead>
+                    <TableHead>Ảnh đóng gói</TableHead>
                     <TableHead>Thao tác</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {orders.map((order) => {
-                    const supplier = suppliers.find(s => s.id === order.supplierId);
+                    const supplier = suppliers.find(s => s.id === order.supplier_id);
                     return (
                       <TableRow key={order.id}>
                         <TableCell>DH{order.id}</TableCell>
                         <TableCell>{supplier?.name}</TableCell>
-                        <TableCell>{order.orderDate}</TableCell>
-                        <TableCell>{formatCurrency(order.totalAmount)}</TableCell>
+                        <TableCell>{order.order_date}</TableCell>
+                        <TableCell>{formatCurrency(order.total_amount)}</TableCell>
                         <TableCell><span className={`px-2 py-1 rounded text-xs ${order.status === 'Đã giao' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>{order.status}</span></TableCell>
                         <TableCell>
+                          <div className="flex gap-1">
+                            {order.packaging_images?.slice(0, 3).map((img: string, idx: number) => (
+                              <img key={idx} src={img} alt={`Package ${idx + 1}`} className="w-8 h-8 rounded object-cover" />
+                            ))}
+                            {order.packaging_images?.length > 3 && (
+                              <span className="text-xs text-muted-foreground">+{order.packaging_images.length - 3}</span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
                           <div className="flex space-x-2">
-                            <Button variant="outline" size="icon"><Edit className="h-4 w-4" /></Button>
-                            <Button variant="destructive" size="icon"><Trash2 className="h-4 w-4" /></Button>
+                            <Button variant="outline" size="icon" onClick={() => setEditingOrder(order)}><Edit className="h-4 w-4" /></Button>
+                            <Button variant="destructive" size="icon" onClick={() => handleDeleteOrder(order.id)}><Trash2 className="h-4 w-4" /></Button>
                           </div>
                         </TableCell>
                       </TableRow>

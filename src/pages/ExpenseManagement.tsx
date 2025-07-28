@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import NavigationMenu from '@/components/NavigationMenu';
+import useApi from '@/hooks/useApi';
+import { generatePDFReport, downloadPDF, formatCurrency } from '@/utils/pdfGenerator';
 import { 
   Card, 
   CardContent, 
@@ -30,8 +32,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Edit, Trash2, TrendingDown, TrendingUp, Calculator } from 'lucide-react';
+import { Plus, Edit, Trash2, TrendingDown, TrendingUp, Calculator, FileDown } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
 
 type ExpenseType = 'fixed' | 'variable' | 'tax' | 'discount';
 
@@ -58,6 +61,7 @@ const ExpenseManagement = () => {
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const { toast } = useToast();
 
   // Real daily revenue from invoices
   const invoices = [
@@ -237,7 +241,9 @@ const ExpenseManagement = () => {
         <CardHeader>
           <div className="flex justify-between items-center">
             <CardTitle>Danh Sách Chi Phí</CardTitle>
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => {}}><FileDown className="mr-2 h-4 w-4" />Xuất Báo Cáo</Button>
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button>
                   <Plus className="mr-2 h-4 w-4" /> Thêm Chi Phí
@@ -289,6 +295,7 @@ const ExpenseManagement = () => {
                 </div>
               </DialogContent>
             </Dialog>
+            </div>
           </div>
         </CardHeader>
         

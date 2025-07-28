@@ -8,6 +8,10 @@ import customersRoutes from './routes/customers.js';
 import invoicesRoutes from './routes/invoices.js';
 import servicesRoutes from './routes/services.js';
 import batchesRoutes from './routes/batches.js';
+import suppliersRoutes from './routes/suppliers.js';
+import purchaseOrdersRoutes from './routes/purchase-orders.js';
+import salesOrdersRoutes from './routes/sales-orders.js';
+import expensesRoutes from './routes/expenses.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -39,6 +43,10 @@ app.use('/api/customers', customersRoutes);
 app.use('/api/invoices', invoicesRoutes);
 app.use('/api/services', servicesRoutes);
 app.use('/api/batches', batchesRoutes);
+app.use('/api/suppliers', suppliersRoutes);
+app.use('/api/purchase-orders', purchaseOrdersRoutes);
+app.use('/api/sales-orders', salesOrdersRoutes);
+app.use('/api/expenses', expensesRoutes);
 
 // Root endpoint for API health check
 app.get('/api', (req, res) => {
