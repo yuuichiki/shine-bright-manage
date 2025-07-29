@@ -83,6 +83,12 @@ const navigationGroups = [
       { name: 'Voucher', path: '/vouchers', icon: Ticket },
     ]
   },
+  {
+    name: 'Nhân sự',
+    items: [
+      { name: 'Quản lý nhân viên', path: '/hr-management', icon: Users },
+    ]
+  },
 ];
 
 const NavigationMenu = () => {

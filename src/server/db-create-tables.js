@@ -254,6 +254,38 @@ function createTables(db) {
     );
   `);
 
+  // Bảng nhân viên
+  db.run(`
+    CREATE TABLE IF NOT EXISTS employees (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      employee_id TEXT UNIQUE NOT NULL,
+      card_id TEXT UNIQUE NOT NULL,
+      position TEXT,
+      department TEXT,
+      phone TEXT,
+      email TEXT,
+      hire_date TEXT NOT NULL,
+      is_active BOOLEAN DEFAULT 1,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  // Bảng chấm công
+  db.run(`
+    CREATE TABLE IF NOT EXISTS attendance (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      employee_id INTEGER NOT NULL,
+      date TEXT NOT NULL,
+      check_in TEXT NOT NULL,
+      check_out TEXT,
+      work_hours REAL,
+      status TEXT DEFAULT 'on_time',
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (employee_id) REFERENCES employees (id)
+    );
+  `);
+
   console.log("Database tables created successfully");
 }
 

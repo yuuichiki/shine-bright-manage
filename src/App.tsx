@@ -22,6 +22,7 @@ import ServiceCostManagement from "./pages/ServiceCostManagement";
 import Promotions from "./pages/Promotions";
 import CustomerGroups from "./pages/CustomerGroups";
 import Vouchers from "./pages/Vouchers";
+import HRManagement from "./pages/HRManagement";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -52,8 +53,9 @@ function App() {
             <Route path="/service-cost-management" element={<ServiceCostManagement />} />
             <Route path="/promotions" element={<Promotions />} />
             <Route path="/customer-groups" element={<CustomerGroups />} />
-            <Route path="/vouchers" element={<Vouchers />} />
-            <Route path="*" element={<NotFound />} />
+          <Route path="/vouchers" element={<Vouchers />} />
+          <Route path="/hr-management" element={<HRManagement />} />
+          <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>

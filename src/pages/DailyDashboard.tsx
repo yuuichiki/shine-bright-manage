@@ -19,6 +19,7 @@ import { CalendarDays, Car, DollarSign, FileText, Users, Clock, Eye, ExternalLin
 import { Link } from 'react-router-dom';
 import NavigationMenu from '@/components/NavigationMenu';
 import PromotionVoucherWidget from '@/components/PromotionVoucherWidget';
+import HRWidget from '@/components/HRWidget';
 import useApi from '@/hooks/useApi';
 
 type TodayInvoice = {
@@ -293,6 +294,11 @@ const DailyDashboard = () => {
       {/* Promotion & Voucher Widgets */}
       <div className="mb-6">
         <PromotionVoucherWidget />
+      </div>
+      
+      {/* HR Widget */}
+      <div className="mb-6">
+        <HRWidget />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
