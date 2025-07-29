@@ -216,15 +216,15 @@ const Vouchers = () => {
                         </div>
                         <div>
                           <label className="text-sm font-medium">Khuyến mãi gốc</label>
-                          <Select
-                            value={editingVoucher.promotion_id?.toString() || ''}
-                            onValueChange={(value) => setEditingVoucher({...editingVoucher, promotion_id: value ? parseInt(value) : undefined})}
+                           <Select
+                             value={editingVoucher.promotion_id?.toString() || 'none'}
+                             onValueChange={(value) => setEditingVoucher({...editingVoucher, promotion_id: value !== 'none' ? parseInt(value) : undefined})}
                           >
                             <SelectTrigger>
                               <SelectValue placeholder="Chọn khuyến mãi" />
                             </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="">Không liên kết</SelectItem>
+                             <SelectContent>
+                               <SelectItem value="none">Không liên kết</SelectItem>
                               {promotions.map((promotion) => (
                                 <SelectItem key={promotion.id} value={promotion.id.toString()}>
                                   {promotion.name}
@@ -238,15 +238,15 @@ const Vouchers = () => {
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <label className="text-sm font-medium">Khách hàng cụ thể</label>
-                          <Select
-                            value={editingVoucher.customer_id?.toString() || ''}
-                            onValueChange={(value) => setEditingVoucher({...editingVoucher, customer_id: value ? parseInt(value) : undefined})}
-                          >
+                           <Select
+                             value={editingVoucher.customer_id?.toString() || 'none'}
+                             onValueChange={(value) => setEditingVoucher({...editingVoucher, customer_id: value !== 'none' ? parseInt(value) : undefined})}
+                           >
                             <SelectTrigger>
                               <SelectValue placeholder="Chọn khách hàng" />
                             </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="">Tất cả khách hàng</SelectItem>
+                             <SelectContent>
+                               <SelectItem value="none">Tất cả khách hàng</SelectItem>
                               {customers.map((customer) => (
                                 <SelectItem key={customer.id} value={customer.id.toString()}>
                                   {customer.name} - {customer.phone}
@@ -257,15 +257,15 @@ const Vouchers = () => {
                         </div>
                         <div>
                           <label className="text-sm font-medium">Nhóm khách hàng</label>
-                          <Select
-                            value={editingVoucher.customer_group_id?.toString() || ''}
-                            onValueChange={(value) => setEditingVoucher({...editingVoucher, customer_group_id: value ? parseInt(value) : undefined})}
-                          >
+                           <Select
+                             value={editingVoucher.customer_group_id?.toString() || 'none'}
+                             onValueChange={(value) => setEditingVoucher({...editingVoucher, customer_group_id: value !== 'none' ? parseInt(value) : undefined})}
+                           >
                             <SelectTrigger>
                               <SelectValue placeholder="Chọn nhóm" />
                             </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="">Không áp dụng</SelectItem>
+                             <SelectContent>
+                               <SelectItem value="none">Không áp dụng</SelectItem>
                               {customerGroups.map((group) => (
                                 <SelectItem key={group.id} value={group.id.toString()}>
                                   {group.name}
