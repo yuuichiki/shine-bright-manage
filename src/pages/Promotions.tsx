@@ -9,10 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Edit, Trash2, Tag, FileDown } from 'lucide-react';
+import { Plus, Edit, Trash2, Tag, FileDown, Ticket } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
 import useApi from '@/hooks/useApi';
 import { generatePromotionReport } from '@/utils/pdfGenerator';
+import PromotionVoucherDialog from '@/components/PromotionVoucherDialog';
 
 type Promotion = {
   id: number;
@@ -341,16 +342,20 @@ const Promotions = () => {
                           />
                         </div>
                       </TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          <Button variant="outline" size="icon" onClick={() => handleEdit(promotion)}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button variant="destructive" size="icon" onClick={() => handleDelete(promotion.id)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
+                       <TableCell>
+                         <div className="flex space-x-2">
+                           <PromotionVoucherDialog 
+                             promotionId={promotion.id} 
+                             promotionName={promotion.name}
+                           />
+                           <Button variant="outline" size="icon" onClick={() => handleEdit(promotion)}>
+                             <Edit className="h-4 w-4" />
+                           </Button>
+                           <Button variant="destructive" size="icon" onClick={() => handleDelete(promotion.id)}>
+                             <Trash2 className="h-4 w-4" />
+                           </Button>
+                         </div>
+                       </TableCell>
                     </TableRow>
                   );
                 })}

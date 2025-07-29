@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { CalendarDays, Car, DollarSign, FileText, Users, Clock, Eye, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import NavigationMenu from '@/components/NavigationMenu';
+import PromotionVoucherWidget from '@/components/PromotionVoucherWidget';
 import useApi from '@/hooks/useApi';
 
 type TodayInvoice = {
@@ -287,6 +288,11 @@ const DailyDashboard = () => {
             </Button>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Promotion & Voucher Widgets */}
+      <div className="mb-6">
+        <PromotionVoucherWidget />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

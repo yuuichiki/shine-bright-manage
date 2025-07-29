@@ -41,6 +41,20 @@ type Invoice = {
     quantity: number;
     price: number;
   }[];
+  promotion?: {
+    id: number;
+    name: string;
+    discount_type: string;
+    discount_value: number;
+  };
+  voucher?: {
+    id: number;
+    code: string;
+    discount_type: string;
+    discount_value: number;
+  };
+  discount_amount?: number;
+  subtotal: number;
   total: number;
   status: 'paid' | 'pending' | 'cancelled';
   paymentMethod?: string;
@@ -59,6 +73,7 @@ const Invoices = () => {
       services: [
         { name: 'Rửa xe cơ bản', quantity: 1, price: 250000 }
       ],
+      subtotal: 250000,
       total: 250000,
       status: 'paid',
       paymentMethod: 'cash'
@@ -75,7 +90,15 @@ const Invoices = () => {
         { name: 'Rửa xe cơ bản', quantity: 1, price: 250000 },
         { name: 'Thay dầu máy', quantity: 1, price: 500000 }
       ],
-      total: 750000,
+      promotion: {
+        id: 1,
+        name: 'Giảm giá sinh nhật',
+        discount_type: 'percentage',
+        discount_value: 10
+      },
+      discount_amount: 75000,
+      subtotal: 750000,
+      total: 675000,
       status: 'paid',
       paymentMethod: 'transfer'
     },
@@ -90,7 +113,15 @@ const Invoices = () => {
       services: [
         { name: 'Đánh bóng toàn xe', quantity: 1, price: 1200000 }
       ],
-      total: 1200000,
+      voucher: {
+        id: 1,
+        code: 'WELCOME50',
+        discount_type: 'fixed',
+        discount_value: 100000
+      },
+      discount_amount: 100000,
+      subtotal: 1200000,
+      total: 1100000,
       status: 'pending'
     },
   ]);
