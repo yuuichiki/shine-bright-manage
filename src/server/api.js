@@ -17,6 +17,7 @@ import customerGroupsRoutes from './routes/customer-groups.js';
 import vouchersRoutes from './routes/vouchers.js';
 import employeesRoutes from './routes/employees.js';
 import attendanceRoutes from './routes/attendance.js';
+import productCategoriesRoutes from './routes/product-categories.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -58,6 +59,18 @@ app.use('/api/vouchers', vouchersRoutes);
 app.use('/api/employees', employeesRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/hr', attendanceRoutes);
+app.use('/api/product-categories', productCategoriesRoutes);
+
+// Routes without /api prefix for compatibility
+app.use('/promotions', promotionsRoutes);
+app.use('/vouchers', vouchersRoutes);
+app.use('/customers', customersRoutes);
+app.use('/customer-groups', customerGroupsRoutes);
+app.use('/employees', employeesRoutes);
+app.use('/hr', attendanceRoutes);
+app.use('/suppliers', suppliersRoutes);
+app.use('/purchase-orders', purchaseOrdersRoutes);
+app.use('/invoices', invoicesRoutes);
 
 // Root endpoint for API health check
 app.get('/api', (req, res) => {

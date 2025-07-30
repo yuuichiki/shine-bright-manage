@@ -4,7 +4,7 @@ const router = express.Router();
 // Get all promotions
 router.get('/', async (req, res) => {
   try {
-    const promotions = req.db.all('SELECT * FROM promotions ORDER BY created_at DESC');
+    const promotions = req.db.all('SELECT * FROM promotions ORDER BY created_date DESC');
     res.json(promotions);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -33,12 +33,14 @@ router.post('/', async (req, res) => {
       INSERT INTO promotions (
         name, description, type, discount_type, discount_value,
         min_purchase_amount, max_discount_amount, start_date, end_date,
-        usage_limit, applicable_products, applicable_services
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        usage_limit, applicable_products, applicable_services, created_date,
+        is_active, used_count
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       name, description, type, discount_type, discount_value,
       min_purchase_amount || 0, max_discount_amount, start_date, end_date,
-      usage_limit, applicable_products, applicable_services
+      usage_limit, applicable_products, applicable_services, 
+      new Date().toISOString(), 1, 0
     ]);
 
     res.status(201).json({
