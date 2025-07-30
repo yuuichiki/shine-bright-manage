@@ -40,9 +40,7 @@ type Customer = {
 const Customers = () => {
   const { toast } = useToast();
   const [customers, setCustomers] = useState<Customer[]>([
-    { id: 1, name: 'Nguyễn Văn A', phone: '0912345678', visitCount: 12, discountPercent: 10, totalSpent: 4500000 },
-    { id: 2, name: 'Trần Thị B', phone: '0987654321', visitCount: 5, discountPercent: 5, totalSpent: 1800000 },
-  ]);
+ ]);
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Partial<Customer>>({});

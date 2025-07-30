@@ -69,38 +69,10 @@ const Index = () => {
 
   // Real data synced with system
   const customers = [
-    { id: 1, name: 'Nguyễn Văn A', phone: '0912345678', visitCount: 12, discountPercent: 10, totalSpent: 4500000 },
-    { id: 2, name: 'Trần Thị B', phone: '0987654321', visitCount: 5, discountPercent: 5, totalSpent: 1800000 },
-  ];
+];
 
   const invoices = [
-    { 
-      id: 1, 
-      date: '2025-01-24', 
-      customer: { name: 'Nguyễn Văn A', phone: '0912345678' },
-      services: [{ name: 'Rửa xe cơ bản', quantity: 1, price: 250000 }],
-      total: 250000,
-      status: 'paid'
-    },
-    { 
-      id: 2, 
-      date: '2025-01-24', 
-      customer: { name: 'Trần Thị B', phone: '0987654321' },
-      services: [
-        { name: 'Rửa xe cơ bản', quantity: 1, price: 250000 },
-        { name: 'Thay dầu máy', quantity: 1, price: 500000 }
-      ],
-      total: 750000,
-      status: 'paid'
-    },
-    { 
-      id: 3, 
-      date: '2025-01-24', 
-      customer: { name: 'Phạm Văn C', phone: '0977777777' },
-      services: [{ name: 'Đánh bóng toàn xe', quantity: 1, price: 1200000 }],
-      total: 1200000,
-      status: 'pending'
-    }
+    
   ];
 
   // Calculate real metrics from invoice data
