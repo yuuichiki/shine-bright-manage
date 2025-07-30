@@ -83,6 +83,43 @@ function loadSampleData(db) {
     );
   } catch (e) {}
 
+  // Thêm sample employees
+  const employees = [
+    { name: 'Nguyễn Văn A', employee_id: 'EMP001', card_id: 'CARD001', position: 'Thợ rửa xe', department: 'Vận hành', phone: '0912345678', email: 'nvana@carwash.com', hire_date: '2024-01-15' },
+    { name: 'Trần Thị B', employee_id: 'EMP002', card_id: 'CARD002', position: 'Nhân viên thu ngân', department: 'Dịch vụ khách hàng', phone: '0987654321', email: 'ttb@carwash.com', hire_date: '2024-02-01' },
+    { name: 'Lê Văn C', employee_id: 'EMP003', card_id: 'CARD003', position: 'Kỹ thuật viên', department: 'Kỹ thuật', phone: '0966778899', email: 'lvc@carwash.com', hire_date: '2024-01-20' }
+  ];
+
+  employees.forEach(emp => {
+    try {
+      db.run(
+        'INSERT INTO employees (name, employee_id, card_id, position, department, phone, email, hire_date, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [emp.name, emp.employee_id, emp.card_id, emp.position, emp.department, emp.phone, emp.email, emp.hire_date, 1]
+      );
+    } catch (err) {
+      console.log(`Employee ${emp.name} already exists`);
+    }
+  });
+
+  // Thêm sample attendance cho hôm nay
+  const today = new Date().toISOString().split('T')[0];
+  const attendanceRecords = [
+    { employee_id: 1, date: today, check_in: '08:00:00', check_out: '17:00:00', work_hours: 9, status: 'on_time' },
+    { employee_id: 2, date: today, check_in: '08:15:00', check_out: '17:15:00', work_hours: 9, status: 'late' },
+    { employee_id: 3, date: today, check_in: '07:55:00', check_out: null, work_hours: null, status: 'on_time' }
+  ];
+
+  attendanceRecords.forEach(record => {
+    try {
+      db.run(
+        'INSERT INTO attendance (employee_id, date, check_in, check_out, work_hours, status) VALUES (?, ?, ?, ?, ?, ?)',
+        [record.employee_id, record.date, record.check_in, record.check_out, record.work_hours, record.status]
+      );
+    } catch (err) {
+      console.log(`Attendance record for employee ${record.employee_id} already exists`);
+    }
+  });
+
   console.log('Sample data loaded successfully');
 }
 export default loadSampleData;
