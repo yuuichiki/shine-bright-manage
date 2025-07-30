@@ -57,5 +57,6 @@ async function recreateDatabase() {
   }
 }
 
-// Run the recreation
+// Run the recreation immediately
+console.log('🚀 Starting database recreation...');
 recreateDatabase().catch(console.error);
