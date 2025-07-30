@@ -7,7 +7,8 @@ function createTables(db) {
   db.run(`
     CREATE TABLE IF NOT EXISTS product_categories (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL UNIQUE
+      name TEXT NOT NULL UNIQUE,
+      description TEXT
     );
   `);
 
@@ -212,7 +213,7 @@ function createTables(db) {
       used_count INTEGER DEFAULT 0,
       applicable_products TEXT,
       applicable_services TEXT,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+      created_date TEXT DEFAULT CURRENT_TIMESTAMP
     );
   `);
 
