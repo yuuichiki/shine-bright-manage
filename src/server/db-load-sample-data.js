@@ -13,17 +13,17 @@ function loadSampleData(db) {
     ('Phụ kiện', 'Phụ kiện và dụng cụ rửa xe'),
     ('Thiết bị', 'Máy móc thiết bị rửa xe')`);
 
-  // 2. Suppliers
-  db.run(`INSERT INTO suppliers (name, contact_person, phone, email, address) VALUES 
+  // 2. Suppliers (correct fields: name, contact, phone, email, address)
+  db.run(`INSERT INTO suppliers (name, contact, phone, email, address) VALUES 
     ('Công ty CP Hóa chất ABC', 'Nguyễn Văn A', '0901234567', 'nguyenvana@abc.com', '123 Đường ABC, Q1, TP.HCM'),
     ('Thiết bị rửa xe XYZ', 'Trần Thị B', '0912345678', 'tranthib@xyz.com', '456 Đường XYZ, Q2, TP.HCM'),
     ('Phân phối dầu gội DEF', 'Lê Văn C', '0923456789', 'levanc@def.com', '789 Đường DEF, Q3, TP.HCM')`);
 
-  // 3. Batches
-  db.run(`INSERT INTO batches (supplier_id, import_date, invoice_number, total_cost, status) VALUES 
-    (1, '2024-01-15', 'INV-2024-001', 5000000, 'completed'),
-    (2, '2024-01-20', 'INV-2024-002', 8000000, 'completed'),
-    (3, '2024-01-25', 'INV-2024-003', 3000000, 'completed')`);
+  // 3. Batches (correct fields: batch_code, supplier_id, import_date, notes)
+  db.run(`INSERT INTO batches (batch_code, supplier_id, import_date, notes) VALUES 
+    ('BATCH-2024-001', 1, '2024-01-15', 'Lô hàng hóa chất ABC đầu tiên'),
+    ('BATCH-2024-002', 2, '2024-01-20', 'Lô thiết bị rửa xe XYZ'),
+    ('BATCH-2024-003', 3, '2024-01-25', 'Lô dầu gội DEF')`);
 
   // 4. Landed Costs
   db.run(`INSERT INTO landed_costs (batch_id, cost_type, amount, description) VALUES 
@@ -32,84 +32,84 @@ function loadSampleData(db) {
     (2, 'Vận chuyển', 400000, 'Phí vận chuyển thiết bị'),
     (3, 'Vận chuyển', 150000, 'Phí vận chuyển dầu gội')`);
 
-  // 5. Inventory
-  db.run(`INSERT INTO inventory (name, category, quantity, unit, reorder_point, unit_price, type, usage_rate, import_date, batch_id) VALUES 
-    ('Dầu gội Turtle Wax', 'Dầu gội', 50, 'chai', 10, 150000, 'consumable', '5 chai/tháng', '2024-01-15', 1),
-    ('Wax Meguiars', 'Wax', 30, 'hộp', 5, 250000, 'consumable', '3 hộp/tháng', '2024-01-15', 1),
-    ('Máy rửa xe Karcher', 'Thiết bị', 2, 'cái', 1, 15000000, 'equipment', 'N/A', '2024-01-20', 2),
-    ('Vòi phun cao áp', 'Phụ kiện', 10, 'cái', 2, 500000, 'equipment', 'N/A', '2024-01-20', 2),
-    ('Hóa chất tẩy rửa', 'Hóa chất', 20, 'lít', 5, 80000, 'consumable', '2 lít/tuần', '2024-01-25', 3)`);
+  // 5. Inventory (correct fields: name, category_id, type, quantity, unit, unit_price, reorder_point, usage_rate, batch_id, import_date, invoice_image)
+  db.run(`INSERT INTO inventory (name, category_id, type, quantity, unit, unit_price, reorder_point, usage_rate, batch_id, import_date) VALUES 
+    ('Dầu gội Turtle Wax', 1, 'consumable', 50, 'chai', 150000, 10, '5 chai/tháng', 1, '2024-01-15'),
+    ('Wax Meguiars', 2, 'consumable', 30, 'hộp', 250000, 5, '3 hộp/tháng', 1, '2024-01-15'),
+    ('Máy rửa xe Karcher', 5, 'equipment', 2, 'cái', 15000000, 1, NULL, 2, '2024-01-20'),
+    ('Vòi phun cao áp', 4, 'equipment', 10, 'cái', 500000, 2, NULL, 2, '2024-01-20'),
+    ('Hóa chất tẩy rửa', 3, 'consumable', 20, 'lít', 80000, 5, '2 lít/tuần', 3, '2024-01-25')`);
 
-  // 6. Customers
-  db.run(`INSERT INTO customers (name, phone, email, address, notes) VALUES 
-    ('Nguyễn Văn Nam', '0987654321', 'nam@email.com', '123 Nguyễn Huệ, Q1, TP.HCM', 'Khách hàng VIP'),
-    ('Trần Thị Lan', '0976543210', 'lan@email.com', '456 Lê Lợi, Q3, TP.HCM', 'Khách hàng thường xuyên'),
-    ('Lê Hoàng Minh', '0965432109', 'minh@email.com', '789 Võ Văn Tần, Q2, TP.HCM', 'Khách hàng mới'),
-    ('Phạm Thị Hoa', '0954321098', 'hoa@email.com', '321 Pasteur, Q1, TP.HCM', 'Khách hàng doanh nghiệp')`);
+  // 6. Customers (correct fields: name, phone, email, discount_rate, notes, registration_date)
+  db.run(`INSERT INTO customers (name, phone, email, discount_rate, notes) VALUES 
+    ('Nguyễn Văn Nam', '0987654321', 'nam@email.com', 0.15, 'Khách hàng VIP'),
+    ('Trần Thị Lan', '0976543210', 'lan@email.com', 0.10, 'Khách hàng thường xuyên'),
+    ('Lê Hoàng Minh', '0965432109', 'minh@email.com', 0.05, 'Khách hàng mới'),
+    ('Phạm Thị Hoa', '0954321098', 'hoa@email.com', 0.20, 'Khách hàng doanh nghiệp')`);
 
-  // 7. Customer Vehicles
-  db.run(`INSERT INTO customer_vehicles (customer_id, license_plate, make, model, year, color, notes) VALUES 
-    (1, '51A-12345', 'Toyota', 'Camry', 2022, 'Trắng', 'Xe sedan cao cấp'),
-    (1, '51B-67890', 'Honda', 'CR-V', 2021, 'Đen', 'Xe SUV gia đình'),
-    (2, '51C-11111', 'Mazda', 'CX-5', 2023, 'Đỏ', 'Xe mới'),
-    (3, '51D-22222', 'Hyundai', 'Accent', 2020, 'Bạc', 'Xe cũ'),
-    (4, '51E-33333', 'Ford', 'Ranger', 2023, 'Xanh', 'Xe bán tải')`);
+  // 7. Customer Vehicles (correct fields: customer_id, vehicle_type, license_plate, brand, model, year)
+  db.run(`INSERT INTO customer_vehicles (customer_id, vehicle_type, license_plate, brand, model, year) VALUES 
+    (1, 'Sedan', '51A-12345', 'Toyota', 'Camry', 2022),
+    (1, 'SUV', '51B-67890', 'Honda', 'CR-V', 2021),
+    (2, 'SUV', '51C-11111', 'Mazda', 'CX-5', 2023),
+    (3, 'Sedan', '51D-22222', 'Hyundai', 'Accent', 2020),
+    (4, 'Pickup', '51E-33333', 'Ford', 'Ranger', 2023)`);
 
-  // 8. Services
-  db.run(`INSERT INTO services (name, description, price, duration_minutes, category) VALUES 
-    ('Rửa xe cơ bản', 'Rửa bên ngoài, lau khô', 50000, 30, 'Rửa xe'),
-    ('Rửa xe cao cấp', 'Rửa toàn bộ, vệ sinh nội thất', 100000, 60, 'Rửa xe'),
-    ('Đánh bóng xe', 'Đánh bóng sơn xe, bảo vệ lâu dài', 200000, 90, 'Đánh bóng'),
-    ('Vệ sinh nội thất', 'Hút bụi, vệ sinh ghế da', 80000, 45, 'Nội thất'),
-    ('Thay dầu máy', 'Thay dầu và lọc dầu', 150000, 30, 'Bảo dưỡng')`);
+  // 8. Services (correct fields: name, description, price, duration)
+  db.run(`INSERT INTO services (name, description, price, duration) VALUES 
+    ('Rửa xe cơ bản', 'Rửa bên ngoài, lau khô', 50000, 30),
+    ('Rửa xe cao cấp', 'Rửa toàn bộ, vệ sinh nội thất', 100000, 60),
+    ('Đánh bóng xe', 'Đánh bóng sơn xe, bảo vệ lâu dài', 200000, 90),
+    ('Vệ sinh nội thất', 'Hút bụi, vệ sinh ghế da', 80000, 45),
+    ('Thay dầu máy', 'Thay dầu và lọc dầu', 150000, 30)`);
 
-  // 9. Customer Groups
-  db.run(`INSERT INTO customer_groups (name, description, discount_percentage) VALUES 
-    ('VIP', 'Khách hàng VIP', 15),
-    ('Thường xuyên', 'Khách hàng thường xuyên', 10),
-    ('Doanh nghiệp', 'Khách hàng doanh nghiệp', 20),
-    ('Mới', 'Khách hàng mới', 5)`);
+  // 9. Customer Groups (correct fields: name, description, criteria, created_at)
+  db.run(`INSERT INTO customer_groups (name, description, criteria) VALUES 
+    ('VIP', 'Khách hàng VIP', 'Doanh thu trên 10 triệu/tháng'),
+    ('Thường xuyên', 'Khách hàng thường xuyên', 'Sử dụng dịch vụ hàng tuần'),
+    ('Doanh nghiệp', 'Khách hàng doanh nghiệp', 'Hợp đồng theo tháng'),
+    ('Mới', 'Khách hàng mới', 'Lần đầu sử dụng dịch vụ')`);
 
-  // 10. Customer Group Members
-  db.run(`INSERT INTO customer_group_members (customer_id, group_id) VALUES 
+  // 10. Customer Group Members (correct fields: customer_id, customer_group_id, assigned_date)
+  db.run(`INSERT INTO customer_group_members (customer_id, customer_group_id) VALUES 
     (1, 1), (2, 2), (3, 4), (4, 3)`);
 
-  // 11. Employees
-  db.run(`INSERT INTO employees (name, position, phone, email, hire_date, salary, status) VALUES 
-    ('Nguyễn Thành Long', 'Quản lý', '0911111111', 'long@carwash.com', '2023-01-01', 15000000, 'active'),
-    ('Trần Văn Đức', 'Nhân viên rửa xe', '0922222222', 'duc@carwash.com', '2023-02-01', 8000000, 'active'),
-    ('Lê Thị Mai', 'Nhân viên thu ngân', '0933333333', 'mai@carwash.com', '2023-03-01', 7000000, 'active'),
-    ('Phạm Văn Hùng', 'Thợ máy', '0944444444', 'hung@carwash.com', '2023-04-01', 10000000, 'active')`);
+  // 11. Employees (correct fields: name, employee_id, card_id, position, department, phone, email, hire_date, is_active, created_at)
+  db.run(`INSERT INTO employees (name, employee_id, card_id, position, department, phone, email, hire_date, is_active) VALUES 
+    ('Nguyễn Thành Long', 'EMP001', 'CARD001', 'Quản lý', 'Điều hành', '0911111111', 'long@carwash.com', '2023-01-01', 1),
+    ('Trần Văn Đức', 'EMP002', 'CARD002', 'Nhân viên rửa xe', 'Vận hành', '0922222222', 'duc@carwash.com', '2023-02-01', 1),
+    ('Lê Thị Mai', 'EMP003', 'CARD003', 'Thu ngân', 'Tài chính', '0933333333', 'mai@carwash.com', '2023-03-01', 1),
+    ('Phạm Văn Hùng', 'EMP004', 'CARD004', 'Thợ máy', 'Kỹ thuật', '0944444444', 'hung@carwash.com', '2023-04-01', 1)`);
 
-  // 12. Users
-  db.run(`INSERT INTO users (username, password, email, role, employee_id, status) VALUES 
-    ('admin', 'admin123', 'admin@carwash.com', 'admin', 1, 'active'),
-    ('cashier', 'cashier123', 'cashier@carwash.com', 'cashier', 3, 'active'),
-    ('manager', 'manager123', 'manager@carwash.com', 'manager', 1, 'active')`);
+  // 12. Users (correct fields: username, password, display_name, created_at)
+  db.run(`INSERT INTO users (username, password, display_name) VALUES 
+    ('admin', 'admin123', 'Quản trị viên'),
+    ('cashier', 'cashier123', 'Thu ngân'),
+    ('manager', 'manager123', 'Quản lý')`);
 
-  // 13. Promotions
-  db.run(`INSERT INTO promotions (name, description, discount_type, discount_value, start_date, end_date, status, conditions) VALUES 
-    ('Giảm giá cuối tuần', 'Giảm 20% các dịch vụ cuối tuần', 'percentage', 20, '2024-01-01', '2024-12-31', 'active', 'Áp dụng thứ 7, chủ nhật'),
-    ('Khuyến mãi khách mới', 'Giảm 50,000đ cho khách hàng mới', 'fixed', 50000, '2024-01-01', '2024-06-30', 'active', 'Khách hàng lần đầu sử dụng dịch vụ'),
-    ('Combo rửa xe + đánh bóng', 'Giảm 15% khi sử dụng 2 dịch vụ', 'percentage', 15, '2024-02-01', '2024-05-31', 'active', 'Phải sử dụng cả 2 dịch vụ')`);
+  // 13. Promotions (correct fields: name, description, type, discount_type, discount_value, min_purchase_amount, max_discount_amount, start_date, end_date, is_active, usage_limit, used_count, applicable_products, applicable_services, created_date)
+  db.run(`INSERT INTO promotions (name, description, type, discount_type, discount_value, min_purchase_amount, start_date, end_date, is_active, usage_limit, used_count, applicable_services) VALUES 
+    ('Giảm giá cuối tuần', 'Giảm 20% các dịch vụ cuối tuần', 'seasonal', 'percentage', 20, 0, '2024-01-01', '2024-12-31', 1, 1000, 0, '1,2,3,4,5'),
+    ('Khuyến mãi khách mới', 'Giảm 50,000đ cho khách hàng mới', 'welcome', 'fixed', 50000, 100000, '2024-01-01', '2024-06-30', 1, 500, 0, '1,2,3,4,5'),
+    ('Combo rửa xe + đánh bóng', 'Giảm 15% khi sử dụng 2 dịch vụ', 'combo', 'percentage', 15, 200000, '2024-02-01', '2024-05-31', 1, 200, 0, '2,3')`);
 
-  // 14. Vouchers
-  db.run(`INSERT INTO vouchers (code, promotion_id, customer_id, status, created_date, used_date) VALUES 
-    ('WEEKEND20', 1, NULL, 'active', '2024-01-01', NULL),
-    ('NEWCUST50', 2, 3, 'used', '2024-01-15', '2024-01-20'),
-    ('COMBO15', 3, NULL, 'active', '2024-02-01', NULL)`);
+  // 14. Vouchers (correct fields: code, promotion_id, customer_id, customer_group_id, discount_type, discount_value, min_purchase_amount, max_discount_amount, valid_from, valid_until, is_used, used_date, used_invoice_id, created_at)
+  db.run(`INSERT INTO vouchers (code, promotion_id, customer_id, customer_group_id, discount_type, discount_value, min_purchase_amount, valid_from, valid_until, is_used, used_date, used_invoice_id) VALUES 
+    ('WEEKEND20', 1, NULL, NULL, 'percentage', 20, 0, '2024-01-01', '2024-12-31', 0, NULL, NULL),
+    ('NEWCUST50', 2, 3, NULL, 'fixed', 50000, 100000, '2024-01-15', '2024-06-30', 1, '2024-01-20', 3),
+    ('COMBO15', 3, NULL, NULL, 'percentage', 15, 200000, '2024-02-01', '2024-05-31', 0, NULL, NULL)`);
 
-  // 15. Invoices
-  db.run(`INSERT INTO invoices (customer_id, date, total_amount, discount_amount, final_amount, payment_method, status, notes) VALUES 
-    (1, '2024-01-20', 250000, 37500, 212500, 'cash', 'paid', 'Áp dụng giảm giá VIP 15%'),
-    (2, '2024-01-21', 150000, 15000, 135000, 'card', 'paid', 'Áp dụng giảm giá thường xuyên 10%'),
-    (3, '2024-01-22', 100000, 50000, 50000, 'cash', 'paid', 'Sử dụng voucher khách mới'),
-    (4, '2024-01-23', 300000, 60000, 240000, 'transfer', 'paid', 'Áp dụng giảm giá doanh nghiệp 20%')`);
+  // 15. Invoices (correct fields: invoice_number, customer_id, vehicle_id, date, total_amount, discount_amount, vat_amount, vat_included, final_amount, payment_method, payment_status, notes)
+  db.run(`INSERT INTO invoices (invoice_number, customer_id, vehicle_id, date, total_amount, discount_amount, vat_amount, vat_included, final_amount, payment_method, payment_status, notes) VALUES 
+    ('INV-2024-001', 1, 1, '2024-01-20', 250000, 37500, 0, 0, 212500, 'cash', 'paid', 'Áp dụng giảm giá VIP 15%'),
+    ('INV-2024-002', 2, 3, '2024-01-21', 180000, 18000, 0, 0, 162000, 'card', 'paid', 'Áp dụng giảm giá thường xuyên 10%'),
+    ('INV-2024-003', 3, 4, '2024-01-22', 130000, 50000, 0, 0, 80000, 'cash', 'paid', 'Sử dụng voucher khách mới'),
+    ('INV-2024-004', 4, 5, '2024-01-23', 450000, 90000, 0, 0, 360000, 'transfer', 'paid', 'Áp dụng giảm giá doanh nghiệp 20%')`);
 
-  // 16. Invoice Services
-  db.run(`INSERT INTO invoice_services (invoice_id, service_id, quantity, unit_price, total_price) VALUES 
+  // 16. Invoice Services (correct fields: invoice_id, service_id, quantity, unit_price, subtotal)
+  db.run(`INSERT INTO invoice_services (invoice_id, service_id, quantity, unit_price, subtotal) VALUES 
     (1, 2, 1, 100000, 100000),
-    (1, 3, 1, 200000, 200000),
+    (1, 3, 1, 150000, 150000),
     (2, 2, 1, 100000, 100000),
     (2, 4, 1, 80000, 80000),
     (3, 1, 1, 50000, 50000),
@@ -118,27 +118,27 @@ function loadSampleData(db) {
     (4, 3, 1, 200000, 200000),
     (4, 5, 1, 150000, 150000)`);
 
-  // 17. Invoice Products (if any products sold)
-  db.run(`INSERT INTO invoice_products (invoice_id, product_name, quantity, unit_price, total_price) VALUES 
-    (1, 'Nước hoa xe Febreze', 1, 50000, 50000),
-    (4, 'Thảm lót sàn cao su', 2, 75000, 150000)`);
+  // 17. Invoice Products (correct fields: invoice_id, product_id, quantity, unit_price, subtotal, batch_id)
+  db.run(`INSERT INTO invoice_products (invoice_id, product_id, quantity, unit_price, subtotal, batch_id) VALUES 
+    (1, 1, 1, 50000, 50000, 1),
+    (4, 4, 2, 75000, 150000, 2)`);
 
-  // 18. Oil Changes
-  db.run(`INSERT INTO oil_changes (vehicle_id, service_date, mileage, oil_type, filter_changed, next_service_mileage, notes) VALUES 
-    (1, '2024-01-20', 25000, 'Fully Synthetic 5W-30', 1, 30000, 'Thay dầu định kỳ'),
-    (2, '2024-01-18', 35000, 'Semi-Synthetic 10W-40', 1, 40000, 'Thay dầu và lọc gió'),
-    (5, '2024-01-25', 15000, 'Conventional 15W-40', 0, 20000, 'Chỉ thay dầu')`);
+  // 18. Oil Changes (correct fields: invoice_id, vehicle_id, oil_type, current_odometer, next_change_odometer, next_change_date, notes)
+  db.run(`INSERT INTO oil_changes (invoice_id, vehicle_id, oil_type, current_odometer, next_change_odometer, next_change_date, notes) VALUES 
+    (1, 1, 'Fully Synthetic 5W-30', 25000, 30000, '2024-04-20', 'Thay dầu định kỳ'),
+    (2, 3, 'Semi-Synthetic 10W-40', 35000, 40000, '2024-04-21', 'Thay dầu và lọc gió'),
+    (4, 5, 'Conventional 15W-40', 15000, 20000, '2024-04-25', 'Chỉ thay dầu')`);
 
-  // 19. Attendance
-  db.run(`INSERT INTO attendance (employee_id, date, check_in, check_out, status, notes) VALUES 
-    (1, '2024-01-20', '08:00', '17:00', 'present', 'Đúng giờ'),
-    (2, '2024-01-20', '08:15', '17:00', 'late', 'Trễ 15 phút'),
-    (3, '2024-01-20', '08:00', '17:00', 'present', 'Đúng giờ'),
-    (4, '2024-01-20', '08:00', '16:30', 'early_leave', 'Về sớm 30 phút'),
-    (1, '2024-01-21', '08:00', '17:00', 'present', 'Đúng giờ'),
-    (2, '2024-01-21', NULL, NULL, 'absent', 'Nghỉ ốm'),
-    (3, '2024-01-21', '08:00', '17:00', 'present', 'Đúng giờ'),
-    (4, '2024-01-21', '08:00', '17:00', 'present', 'Đúng giờ')`);
+  // 19. Attendance (correct fields: employee_id, date, check_in, check_out, work_hours, status, created_at)
+  db.run(`INSERT INTO attendance (employee_id, date, check_in, check_out, work_hours, status) VALUES 
+    (1, '2024-01-20', '08:00', '17:00', 9.0, 'on_time'),
+    (2, '2024-01-20', '08:15', '17:00', 8.75, 'late'),
+    (3, '2024-01-20', '08:00', '17:00', 9.0, 'on_time'),
+    (4, '2024-01-20', '08:00', '16:30', 8.5, 'early_leave'),
+    (1, '2024-01-21', '08:00', '17:00', 9.0, 'on_time'),
+    (2, '2024-01-21', NULL, NULL, 0, 'absent'),
+    (3, '2024-01-21', '08:00', '17:00', 9.0, 'on_time'),
+    (4, '2024-01-21', '08:00', '17:00', 9.0, 'on_time')`);
 
   console.log('✅ Sample data loaded successfully!');
 }
