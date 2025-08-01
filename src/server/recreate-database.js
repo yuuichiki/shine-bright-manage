@@ -36,9 +36,9 @@ async function recreateDatabase() {
     clearSampleData(db);
     console.log('✅ Cleared sample data');
     
-    // Load sample data for testing
+    // Load sample data for testing (currently empty)
     loadSampleData(db);
-    console.log('✅ Loaded sample data');
+    console.log('✅ Database ready with empty tables');
     
     // Save the database to file
     const data = db.export();
