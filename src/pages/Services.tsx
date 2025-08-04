@@ -1,6 +1,7 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import NavigationMenu from '@/components/NavigationMenu';
+import useApi from '@/hooks/useApi';
 import { 
   Card, 
   CardContent, 
@@ -38,8 +39,8 @@ import { useToast } from "@/hooks/use-toast";
 type Service = {
   id: number;
   name: string;
-  category: string;
-  basePrice: number;
+  description?: string;
+  price: number;
   duration: number;
   carTypeSpecificPrices?: {
     carTypeId: number;
@@ -50,58 +51,53 @@ type Service = {
 type CarCategory = {
   id: number;
   name: string;
-  serviceMultiplier: number;
+  description?: string;
+  service_multiplier: number;
 };
 
 const Services = () => {
-  const [services, setServices] = useState<Service[]>([
-    { 
-      id: 1, 
-      name: 'Rửa xe cơ bản', 
-      category: 'Ngoại thất', 
-      basePrice: 50000, 
-      duration: 30,
-      carTypeSpecificPrices: [
-        { carTypeId: 1, price: 50000 },
-        { carTypeId: 2, price: 65000 },
-        { carTypeId: 3, price: 75000 },
-        { carTypeId: 4, price: 100000 },
-      ]
-    },
-    { 
-      id: 2, 
-      name: 'Đánh bóng toàn bộ xe', 
-      category: 'Hoàn thiện', 
-      basePrice: 500000, 
-      duration: 180,
-      carTypeSpecificPrices: [
-        { carTypeId: 1, price: 500000 },
-        { carTypeId: 2, price: 650000 },
-        { carTypeId: 3, price: 750000 },
-        { carTypeId: 4, price: 1000000 },
-      ]
-    },
-    { 
-      id: 3, 
-      name: 'Thay dầu máy', 
-      category: 'Bảo dưỡng', 
-      basePrice: 300000, 
-      duration: 45,
-      carTypeSpecificPrices: [
-        { carTypeId: 1, price: 300000 },
-        { carTypeId: 2, price: 390000 },
-        { carTypeId: 3, price: 450000 },
-        { carTypeId: 4, price: 600000 },
-      ]
-    }
-  ]);
+  const [services, setServices] = useState<Service[]>([]);
+  const [carCategories, setCarCategories] = useState<CarCategory[]>([]);
+  const { callApi, loading, error } = useApi();
 
-  const [carCategories] = useState<CarCategory[]>([
-    { id: 1, name: 'Xe con 4 chỗ', serviceMultiplier: 1 },
-    { id: 2, name: 'Xe con 7 chỗ', serviceMultiplier: 1.3 },
-    { id: 3, name: 'Xe bán tải', serviceMultiplier: 1.5 },
-    { id: 4, name: 'Xe sang', serviceMultiplier: 2 }
-  ]);
+  // Load data from API
+  useEffect(() => {
+    loadCarCategories();
+  }, []);
+
+  useEffect(() => {
+    if (carCategories.length > 0) {
+      loadServices();
+    }
+  }, [carCategories]);
+
+  const loadServices = async () => {
+    const data = await callApi<null, Service[]>({
+      url: '/services',
+      method: 'GET'
+    });
+    if (data) {
+      // Transform database services to include car-specific pricing
+      const servicesWithPricing = data.map(service => ({
+        ...service,
+        carTypeSpecificPrices: carCategories.map(category => ({
+          carTypeId: category.id,
+          price: Math.round(service.price * category.service_multiplier / 1000) * 1000
+        }))
+      }));
+      setServices(servicesWithPricing);
+    }
+  };
+
+  const loadCarCategories = async () => {
+    const data = await callApi<null, CarCategory[]>({
+      url: '/car-categories',
+      method: 'GET'
+    });
+    if (data) {
+      setCarCategories(data);
+    }
+  };
 
   const [newService, setNewService] = useState<Partial<Service>>({
     carTypeSpecificPrices: []
@@ -119,35 +115,46 @@ const Services = () => {
       service.carTypeSpecificPrices.forEach(price => {
         prices[price.carTypeId] = price.price;
       });
-    } else if (service.basePrice) {
+    } else if (service.price) {
       carCategories.forEach(category => {
-        prices[category.id] = Math.round((service.basePrice || 0) * category.serviceMultiplier / 1000) * 1000;
+        prices[category.id] = Math.round((service.price || 0) * category.service_multiplier / 1000) * 1000;
       });
     }
     setCustomPrices(prices);
   };
 
-  const handleAddService = () => {
-    if (newService.name && newService.category && newService.basePrice) {
-      const carTypeSpecificPrices = carCategories.map(category => ({
-        carTypeId: category.id,
-        price: customPrices[category.id] || Math.round((newService.basePrice || 0) * category.serviceMultiplier / 1000) * 1000
-      }));
-
-      const serviceToAdd = {
-        ...newService,
-        id: Math.max(...services.map(s => s.id), 0) + 1,
-        carTypeSpecificPrices
-      } as Service;
-
-      setServices([...services, serviceToAdd]);
-      setNewService({ carTypeSpecificPrices: [] });
-      setCustomPrices({});
-      setIsDialogOpen(false);
-      toast({
-        title: "Thành công",
-        description: "Dịch vụ mới đã được thêm vào danh sách."
+  const handleAddService = async () => {
+    if (newService.name && newService.description && newService.price) {
+      const data = await callApi<Partial<Service>, Service>({
+        url: '/services',
+        method: 'POST',
+        body: {
+          name: newService.name,
+          description: newService.description,
+          price: newService.price,
+          duration: newService.duration
+        }
       });
+
+      if (data) {
+        // Add car-specific pricing to the new service
+        const serviceWithPricing = {
+          ...data,
+          carTypeSpecificPrices: carCategories.map(category => ({
+            carTypeId: category.id,
+            price: customPrices[category.id] || Math.round((data.price || 0) * category.service_multiplier / 1000) * 1000
+          }))
+        };
+
+        setServices([...services, serviceWithPricing]);
+        setNewService({ carTypeSpecificPrices: [] });
+        setCustomPrices({});
+        setIsDialogOpen(false);
+        toast({
+          title: "Thành công",
+          description: "Dịch vụ mới đã được thêm vào danh sách."
+        });
+      }
     }
   };
 
@@ -157,35 +164,53 @@ const Services = () => {
     setIsEditDialogOpen(true);
   };
 
-  const handleUpdateService = () => {
-    if (editingService && editingService.name && editingService.category && editingService.basePrice) {
-      const carTypeSpecificPrices = carCategories.map(category => ({
-        carTypeId: category.id,
-        price: customPrices[category.id] || Math.round((editingService.basePrice || 0) * category.serviceMultiplier / 1000) * 1000
-      }));
-
-      const updatedService = {
-        ...editingService,
-        carTypeSpecificPrices
-      };
-
-      setServices(services.map(s => s.id === editingService.id ? updatedService : s));
-      setEditingService(null);
-      setCustomPrices({});
-      setIsEditDialogOpen(false);
-      toast({
-        title: "Thành công",
-        description: "Dịch vụ đã được cập nhật."
+  const handleUpdateService = async () => {
+    if (editingService && editingService.name && editingService.description && editingService.price) {
+      const data = await callApi<Partial<Service>, Service>({
+        url: `/services/${editingService.id}`,
+        method: 'PUT',
+        body: {
+          name: editingService.name,
+          description: editingService.description,
+          price: editingService.price,
+          duration: editingService.duration
+        }
       });
+
+      if (data) {
+        const updatedService = {
+          ...data,
+          carTypeSpecificPrices: carCategories.map(category => ({
+            carTypeId: category.id,
+            price: customPrices[category.id] || Math.round((data.price || 0) * category.service_multiplier / 1000) * 1000
+          }))
+        };
+
+        setServices(services.map(s => s.id === editingService.id ? updatedService : s));
+        setEditingService(null);
+        setCustomPrices({});
+        setIsEditDialogOpen(false);
+        toast({
+          title: "Thành công",
+          description: "Dịch vụ đã được cập nhật."
+        });
+      }
     }
   };
 
-  const handleDeleteService = (serviceId: number) => {
-    setServices(services.filter(s => s.id !== serviceId));
-    toast({
-      title: "Thành công",
-      description: "Dịch vụ đã được xóa khỏi danh sách."
+  const handleDeleteService = async (serviceId: number) => {
+    const success = await callApi<null, any>({
+      url: `/services/${serviceId}`,
+      method: 'DELETE'
     });
+
+    if (success) {
+      setServices(services.filter(s => s.id !== serviceId));
+      toast({
+        title: "Thành công",
+        description: "Dịch vụ đã được xóa khỏi danh sách."
+      });
+    }
   };
 
   const updateCustomPrice = (carTypeId: number, price: number) => {
@@ -198,7 +223,7 @@ const Services = () => {
   const resetPricesToDefault = (basePrice: number) => {
     const newPrices: {[key: number]: number} = {};
     carCategories.forEach(category => {
-      newPrices[category.id] = Math.round(basePrice * category.serviceMultiplier / 1000) * 1000;
+      newPrices[category.id] = Math.round(basePrice * category.service_multiplier / 1000) * 1000;
     });
     setCustomPrices(newPrices);
   };
@@ -237,15 +262,15 @@ const Services = () => {
                     onChange={(e) => setNewService({...newService, name: e.target.value})}
                   />
                   <Input 
-                    placeholder="Phân loại" 
-                    value={newService.category || ''}
-                    onChange={(e) => setNewService({...newService, category: e.target.value})}
+                    placeholder="Mô tả" 
+                    value={newService.description || ''}
+                    onChange={(e) => setNewService({...newService, description: e.target.value})}
                   />
                   <Input 
                     type="number" 
                     placeholder="Giá cơ bản (VNĐ)" 
-                    value={newService.basePrice || ''}
-                    onChange={(e) => setNewService({...newService, basePrice: Number(e.target.value)})}
+                    value={newService.price || ''}
+                    onChange={(e) => setNewService({...newService, price: Number(e.target.value)})}
                   />
                   <Input 
                     type="number" 
@@ -253,7 +278,7 @@ const Services = () => {
                     value={newService.duration || ''}
                     onChange={(e) => setNewService({...newService, duration: Number(e.target.value)})}
                   />
-                  {newService.basePrice && (
+                  {newService.price && (
                     <div className="space-y-2">
                       <div className="flex justify-between items-center">
                         <Label>Giá theo loại xe</Label>
@@ -261,7 +286,7 @@ const Services = () => {
                           type="button" 
                           variant="outline" 
                           size="sm"
-                          onClick={() => resetPricesToDefault(newService.basePrice || 0)}
+                          onClick={() => resetPricesToDefault(newService.price || 0)}
                         >
                           Tính lại giá tự động
                         </Button>
@@ -272,11 +297,11 @@ const Services = () => {
                           <Input
                             type="number"
                             className="w-32"
-                            value={customPrices[category.id] || Math.round((newService.basePrice || 0) * category.serviceMultiplier / 1000) * 1000}
+                            value={customPrices[category.id] || Math.round((newService.price || 0) * category.service_multiplier / 1000) * 1000}
                             onChange={(e) => updateCustomPrice(category.id, Number(e.target.value))}
                             onFocus={() => {
                               if (!customPrices[category.id]) {
-                                updateCustomPrice(category.id, Math.round((newService.basePrice || 0) * category.serviceMultiplier / 1000) * 1000);
+                                updateCustomPrice(category.id, Math.round((newService.price || 0) * category.service_multiplier / 1000) * 1000);
                               }
                             }}
                           />
@@ -291,58 +316,70 @@ const Services = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Tên Dịch Vụ</TableHead>
-                <TableHead>Phân Loại</TableHead>
-                <TableHead>Giá Cơ Bản</TableHead>
-                <TableHead>Thời Gian</TableHead>
-                <TableHead>Chi Tiết</TableHead>
-                <TableHead>Thao Tác</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {services.map((service) => (
-                <TableRow key={service.id}>
-                  <TableCell>{service.name}</TableCell>
-                  <TableCell>{service.category}</TableCell>
-                  <TableCell>{formatCurrency(service.basePrice)}</TableCell>
-                  <TableCell>{service.duration} phút</TableCell>
-                  <TableCell>
-                    <Accordion type="single" collapsible className="w-full">
-                      <AccordionItem value="prices">
-                        <AccordionTrigger>Giá theo loại xe</AccordionTrigger>
-                        <AccordionContent>
-                          <div className="text-sm space-y-1">
-                            {service.carTypeSpecificPrices?.map((pricing) => {
-                              const carType = carCategories.find(c => c.id === pricing.carTypeId);
-                              return (
-                                <div key={pricing.carTypeId} className="flex justify-between">
-                                  <span>{carType?.name}:</span>
-                                  <span className="font-medium">{formatCurrency(pricing.price)}</span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                    </Accordion>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
-                      <Button variant="outline" size="icon" onClick={() => handleEditService(service)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button variant="destructive" size="icon" onClick={() => handleDeleteService(service.id)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
+          {loading && (
+            <div className="flex justify-center items-center py-8">
+              <div className="text-center">Đang tải dữ liệu...</div>
+            </div>
+          )}
+          {error && (
+            <div className="text-center py-8 text-red-500">
+              Lỗi: {error}
+            </div>
+          )}
+          {!loading && !error && (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Tên Dịch Vụ</TableHead>
+                  <TableHead>Mô Tả</TableHead>
+                  <TableHead>Giá Cơ Bản</TableHead>
+                  <TableHead>Thời Gian</TableHead>
+                  <TableHead>Chi Tiết</TableHead>
+                  <TableHead>Thao Tác</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {services.map((service) => (
+                  <TableRow key={service.id}>
+                    <TableCell>{service.name}</TableCell>
+                    <TableCell>{service.description}</TableCell>
+                    <TableCell>{formatCurrency(service.price)}</TableCell>
+                    <TableCell>{service.duration} phút</TableCell>
+                    <TableCell>
+                      <Accordion type="single" collapsible className="w-full">
+                        <AccordionItem value="prices">
+                          <AccordionTrigger>Giá theo loại xe</AccordionTrigger>
+                          <AccordionContent>
+                            <div className="text-sm space-y-1">
+                              {service.carTypeSpecificPrices?.map((pricing) => {
+                                const carType = carCategories.find(c => c.id === pricing.carTypeId);
+                                return (
+                                  <div key={pricing.carTypeId} className="flex justify-between">
+                                    <span>{carType?.name}:</span>
+                                    <span className="font-medium">{formatCurrency(pricing.price)}</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                      </Accordion>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex space-x-2">
+                        <Button variant="outline" size="icon" onClick={() => handleEditService(service)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="destructive" size="icon" onClick={() => handleDeleteService(service.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
 
@@ -363,15 +400,15 @@ const Services = () => {
                 onChange={(e) => setEditingService({...editingService, name: e.target.value})}
               />
               <Input 
-                placeholder="Phân loại" 
-                value={editingService.category || ''}
-                onChange={(e) => setEditingService({...editingService, category: e.target.value})}
+                placeholder="Mô tả" 
+                value={editingService.description || ''}
+                onChange={(e) => setEditingService({...editingService, description: e.target.value})}
               />
               <Input 
                 type="number" 
                 placeholder="Giá cơ bản (VNĐ)" 
-                value={editingService.basePrice || ''}
-                onChange={(e) => setEditingService({...editingService, basePrice: Number(e.target.value)})}
+                value={editingService.price || ''}
+                onChange={(e) => setEditingService({...editingService, price: Number(e.target.value)})}
               />
               <Input 
                 type="number" 
@@ -386,7 +423,7 @@ const Services = () => {
                     type="button" 
                     variant="outline" 
                     size="sm"
-                    onClick={() => resetPricesToDefault(editingService.basePrice || 0)}
+                    onClick={() => resetPricesToDefault(editingService.price || 0)}
                   >
                     Tính lại giá tự động
                   </Button>

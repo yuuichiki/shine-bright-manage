@@ -95,6 +95,16 @@ function createTables(db) {
     );
   `);
 
+  // Bảng danh mục xe
+  db.run(`
+    CREATE TABLE IF NOT EXISTS car_categories (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      description TEXT,
+      service_multiplier REAL NOT NULL DEFAULT 1.0
+    );
+  `);
+
   // Bảng dịch vụ
   db.run(`
     CREATE TABLE IF NOT EXISTS services (

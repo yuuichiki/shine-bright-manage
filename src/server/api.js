@@ -18,6 +18,7 @@ import vouchersRoutes from './routes/vouchers.js';
 import employeesRoutes from './routes/employees.js';
 import attendanceRoutes from './routes/attendance.js';
 import productCategoriesRoutes from './routes/product-categories.js';
+import carCategoriesRoutes from './routes/car-categories.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -60,6 +61,7 @@ app.use('/api/employees', employeesRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/hr', attendanceRoutes);
 app.use('/api/product-categories', productCategoriesRoutes);
+app.use('/api/car-categories', carCategoriesRoutes);
 
 // Routes without /api prefix for compatibility
 app.use('/promotions', promotionsRoutes);

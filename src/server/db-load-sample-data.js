@@ -55,7 +55,14 @@ function loadSampleData(db) {
     (3, 'Sedan', '51D-22222', 'Hyundai', 'Accent', 2020),
     (4, 'Pickup', '51E-33333', 'Ford', 'Ranger', 2023)`);
 
-  // 8. Services (correct fields: name, description, price, duration)
+  // 8. Car Categories (correct fields: name, description, service_multiplier)
+  db.run(`INSERT INTO car_categories (name, description, service_multiplier) VALUES 
+    ('Xe con 4 chỗ', 'Xe sedan, hatchback kích thước nhỏ', 1.0),
+    ('Xe con 7 chỗ', 'Xe SUV, MPV kích thước trung bình', 1.3),
+    ('Xe bán tải', 'Xe pickup, bán tải các loại', 1.5),
+    ('Xe sang', 'Xe hạng sang, siêu xe', 2.0)`);
+
+  // 9. Services (correct fields: name, description, price, duration)
   db.run(`INSERT INTO services (name, description, price, duration) VALUES 
     ('Rửa xe cơ bản', 'Rửa bên ngoài, lau khô', 50000, 30),
     ('Rửa xe cao cấp', 'Rửa toàn bộ, vệ sinh nội thất', 100000, 60),
