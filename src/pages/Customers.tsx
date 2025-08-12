@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import NavigationMenu from '@/components/NavigationMenu';
 import { 
   Card, 
@@ -25,53 +25,82 @@ import {
   DialogTrigger,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Plus, Edit, Trash2, Phone, User, Percent } from 'lucide-react';
+import { Plus, Edit, Trash2, Loader2 } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
+import { useApi } from '@/hooks/useApi';
 
 type Customer = {
   id: number;
   name: string;
   phone: string;
-  visitCount: number;
-  discountPercent: number;
-  totalSpent: number;
+  email?: string;
+  discount_rate: number;
+  notes?: string;
 };
 
 const Customers = () => {
   const { toast } = useToast();
-  const [customers, setCustomers] = useState<Customer[]>([
- ]);
-  
+  const { callApi, loading } = useApi();
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Partial<Customer>>({});
   const [isEditing, setIsEditing] = useState(false);
 
-  const handleAddCustomer = () => {
+  // Load customers from database
+  useEffect(() => {
+    loadCustomers();
+  }, []);
+
+  const loadCustomers = async () => {
+    const data = await callApi<void, Customer[]>({
+      url: '/customers',
+      method: 'GET'
+    });
+    if (data) {
+      setCustomers(data);
+    }
+  };
+
+  const handleAddCustomer = async () => {
     if (editingCustomer.name && editingCustomer.phone) {
       if (isEditing) {
         // Update existing customer
-        setCustomers(customers.map(c => 
-          c.id === editingCustomer.id ? { ...c, ...editingCustomer } : c
-        ));
-        toast({
-          title: "Khách hàng đã được cập nhật",
-          description: `Thông tin khách hàng ${editingCustomer.name} đã được cập nhật thành công.`,
+        const updatedCustomer = await callApi<Partial<Customer>, Customer>({
+          url: `/customers/${editingCustomer.id}`,
+          method: 'PUT',
+          body: editingCustomer
         });
+        
+        if (updatedCustomer) {
+          setCustomers(customers.map(c => 
+            c.id === editingCustomer.id ? updatedCustomer : c
+          ));
+          toast({
+            title: "Khách hàng đã được cập nhật",
+            description: `Thông tin khách hàng ${editingCustomer.name} đã được cập nhật thành công.`,
+          });
+        }
       } else {
         // Add new customer
-        const newCustomer = {
-          id: customers.length ? Math.max(...customers.map(c => c.id)) + 1 : 1,
-          name: editingCustomer.name,
-          phone: editingCustomer.phone,
-          visitCount: 0,
-          discountPercent: editingCustomer.discountPercent || 0,
-          totalSpent: 0
-        };
-        setCustomers([...customers, newCustomer]);
-        toast({
-          title: "Đã thêm khách hàng mới",
-          description: `Khách hàng ${newCustomer.name} đã được thêm thành công.`,
+        const newCustomer = await callApi<Partial<Customer>, Customer>({
+          url: '/customers',
+          method: 'POST',
+          body: {
+            name: editingCustomer.name,
+            phone: editingCustomer.phone,
+            email: editingCustomer.email || '',
+            discount_rate: editingCustomer.discount_rate || 0,
+            notes: editingCustomer.notes || ''
+          }
         });
+        
+        if (newCustomer) {
+          setCustomers([...customers, newCustomer]);
+          toast({
+            title: "Đã thêm khách hàng mới",
+            description: `Khách hàng ${newCustomer.name} đã được thêm thành công.`,
+          });
+        }
       }
       
       setIsDialogOpen(false);
@@ -92,14 +121,21 @@ const Customers = () => {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
     const customerToDelete = customers.find(c => c.id === id);
     if (customerToDelete) {
-      setCustomers(customers.filter(c => c.id !== id));
-      toast({
-        title: "Đã xóa khách hàng",
-        description: `Khách hàng ${customerToDelete.name} đã được xóa thành công.`,
+      const success = await callApi<void, void>({
+        url: `/customers/${id}`,
+        method: 'DELETE'
       });
+      
+      if (success !== null) {
+        setCustomers(customers.filter(c => c.id !== id));
+        toast({
+          title: "Đã xóa khách hàng",
+          description: `Khách hàng ${customerToDelete.name} đã được xóa thành công.`,
+        });
+      }
     }
   };
 
@@ -115,6 +151,20 @@ const Customers = () => {
     setEditingCustomer({});
     setIsEditing(false);
   };
+
+  if (loading && customers.length === 0) {
+    return (
+      <>
+        <NavigationMenu />
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-center h-64">
+            <Loader2 className="h-8 w-8 animate-spin" />
+            <span className="ml-2">Đang tải dữ liệu khách hàng...</span>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -158,23 +208,43 @@ const Customers = () => {
                       placeholder="Nhập số điện thoại"
                     />
                   </div>
-                  {isEditing && (
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <label className="text-right">Chiết khấu (%)</label>
-                      <Input 
-                        className="col-span-3"
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={editingCustomer.discountPercent || 0}
-                        onChange={(e) => setEditingCustomer({...editingCustomer, discountPercent: parseInt(e.target.value, 10)})}
-                        placeholder="Nhập % chiết khấu"
-                      />
-                    </div>
-                  )}
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <label className="text-right">Email</label>
+                    <Input 
+                      className="col-span-3"
+                      value={editingCustomer.email || ''}
+                      onChange={(e) => setEditingCustomer({...editingCustomer, email: e.target.value})}
+                      placeholder="Nhập email (tùy chọn)"
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <label className="text-right">Chiết khấu (%)</label>
+                    <Input 
+                      className="col-span-3"
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.01"
+                      value={editingCustomer.discount_rate || 0}
+                      onChange={(e) => setEditingCustomer({...editingCustomer, discount_rate: parseFloat(e.target.value)})}
+                      placeholder="Nhập % chiết khấu"
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <label className="text-right">Ghi chú</label>
+                    <Input 
+                      className="col-span-3"
+                      value={editingCustomer.notes || ''}
+                      onChange={(e) => setEditingCustomer({...editingCustomer, notes: e.target.value})}
+                      placeholder="Nhập ghi chú (tùy chọn)"
+                    />
+                  </div>
                   <div className="flex justify-end gap-2 mt-2">
                     <Button variant="outline" onClick={handleDialogClose}>Hủy</Button>
-                    <Button onClick={handleAddCustomer}>{isEditing ? 'Cập nhật' : 'Thêm'}</Button>
+                    <Button onClick={handleAddCustomer} disabled={loading}>
+                      {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      {isEditing ? 'Cập nhật' : 'Thêm'}
+                    </Button>
                   </div>
                 </div>
               </DialogContent>
@@ -187,9 +257,9 @@ const Customers = () => {
               <TableRow>
                 <TableHead>Tên khách hàng</TableHead>
                 <TableHead>Số điện thoại</TableHead>
-                <TableHead>Số lần ghé</TableHead>
+                <TableHead>Email</TableHead>
                 <TableHead>Chiết khấu</TableHead>
-                <TableHead>Tổng chi tiêu</TableHead>
+                <TableHead>Ghi chú</TableHead>
                 <TableHead>Thao tác</TableHead>
               </TableRow>
             </TableHeader>
@@ -198,9 +268,9 @@ const Customers = () => {
                 <TableRow key={customer.id}>
                   <TableCell>{customer.name}</TableCell>
                   <TableCell>{customer.phone}</TableCell>
-                  <TableCell>{customer.visitCount}</TableCell>
-                  <TableCell>{customer.discountPercent}%</TableCell>
-                  <TableCell>{customer.totalSpent.toLocaleString('vi-VN')}đ</TableCell>
+                  <TableCell>{customer.email || '-'}</TableCell>
+                  <TableCell>{(customer.discount_rate * 100).toFixed(1)}%</TableCell>
+                  <TableCell>{customer.notes || '-'}</TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
                       <Button variant="outline" size="icon" onClick={() => handleEdit(customer)}>

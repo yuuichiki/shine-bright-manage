@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import NavigationMenu from '@/components/NavigationMenu';
 import { 
@@ -31,7 +32,6 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { Plus, Edit, Trash2, Calculator, Package, Zap, Users, Home } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
 
@@ -56,53 +56,7 @@ type ServiceCost = {
 
 const ServiceCostManagement = () => {
   const { toast } = useToast();
-  const [serviceCosts, setServiceCosts] = useState<ServiceCost[]>([
-    {
-      id: 1,
-      serviceName: 'Rửa xe cơ bản',
-      components: [
-        {
-          id: 1,
-          name: 'Nước rửa xe',
-          type: 'material',
-          unitCost: 1000000, // 1 chai 1tr
-          usagePerService: 0.02, // 1/50 chai
-          unit: 'chai',
-          description: '1 chai 1L pha được 50 lần rửa'
-        },
-        {
-          id: 2,
-          name: 'Nước sạch',
-          type: 'utility',
-          unitCost: 5000,
-          usagePerService: 1,
-          unit: 'lần',
-          description: 'Chi phí nước rửa mỗi lần'
-        },
-        {
-          id: 3,
-          name: 'Điện',
-          type: 'utility',
-          unitCost: 5000,
-          usagePerService: 1,
-          unit: 'lần',
-          description: 'Chi phí điện máy rửa, ánh sáng'
-        },
-        {
-          id: 4,
-          name: 'Nhân công',
-          type: 'labor',
-          unitCost: 15000,
-          usagePerService: 1,
-          unit: 'lần',
-          description: 'Chi phí nhân công trực tiếp'
-        }
-      ],
-      totalCostPerService: 45000,
-      suggestedPrice: 80000,
-      profitMargin: 77.8
-    }
-  ]);
+  const [serviceCosts, setServiceCosts] = useState<ServiceCost[]>([]);
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -441,101 +395,111 @@ const ServiceCostManagement = () => {
         </div>
 
         {/* Service Cost List */}
-        <div className="space-y-6">
-          {serviceCosts.map((serviceCost) => (
-            <Card key={serviceCost.id}>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-xl">{serviceCost.serviceName}</CardTitle>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm">
-                      <Edit className="h-4 w-4 mr-2" />
-                      Sửa
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => handleDeleteServiceCost(serviceCost.id)}
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Xóa
-                    </Button>
+        {serviceCosts.length === 0 ? (
+          <Card>
+            <CardContent className="py-8 text-center">
+              <Calculator className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+              <h3 className="text-lg font-semibold mb-2">Chưa có cấu trúc chi phí nào</h3>
+              <p className="text-muted-foreground">Bắt đầu bằng cách thêm cấu trúc chi phí dịch vụ đầu tiên</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-6">
+            {serviceCosts.map((serviceCost) => (
+              <Card key={serviceCost.id}>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-xl">{serviceCost.serviceName}</CardTitle>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm">
+                        <Edit className="h-4 w-4 mr-2" />
+                        Sửa
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleDeleteServiceCost(serviceCost.id)}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Xóa
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Thành phần chi phí</TableHead>
-                      <TableHead>Loại</TableHead>
-                      <TableHead>Giá đơn vị</TableHead>
-                      <TableHead>Lượng dùng/lần</TableHead>
-                      <TableHead>Chi phí/lần dịch vụ</TableHead>
-                      <TableHead>Mô tả</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {serviceCost.components.map((component) => (
-                      <TableRow key={component.id}>
-                        <TableCell className="font-medium">{component.name}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            {getTypeIcon(component.type)}
-                            {getTypeName(component.type)}
-                          </div>
-                        </TableCell>
-                        <TableCell>{component.unitCost.toLocaleString('vi-VN')} đ</TableCell>
-                        <TableCell>{component.usagePerService} {component.unit}</TableCell>
-                        <TableCell className="font-medium">
-                          {(component.unitCost * component.usagePerService).toLocaleString('vi-VN')} đ
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {component.description}
-                        </TableCell>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Thành phần chi phí</TableHead>
+                        <TableHead>Loại</TableHead>
+                        <TableHead>Giá đơn vị</TableHead>
+                        <TableHead>Lượng dùng/lần</TableHead>
+                        <TableHead>Chi phí/lần dịch vụ</TableHead>
+                        <TableHead>Mô tả</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {serviceCost.components.map((component) => (
+                        <TableRow key={component.id}>
+                          <TableCell className="font-medium">{component.name}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              {getTypeIcon(component.type)}
+                              {getTypeName(component.type)}
+                            </div>
+                          </TableCell>
+                          <TableCell>{component.unitCost.toLocaleString('vi-VN')} đ</TableCell>
+                          <TableCell>{component.usagePerService} {component.unit}</TableCell>
+                          <TableCell className="font-medium">
+                            {(component.unitCost * component.usagePerService).toLocaleString('vi-VN')} đ
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground">
+                            {component.description}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
 
-                <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Card>
-                    <CardContent className="pt-6">
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-red-600">
-                          {serviceCost.totalCostPerService.toLocaleString('vi-VN')} đ
+                  <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Card>
+                      <CardContent className="pt-6">
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-red-600">
+                            {serviceCost.totalCostPerService.toLocaleString('vi-VN')} đ
+                          </div>
+                          <div className="text-sm text-muted-foreground">Tổng chi phí</div>
                         </div>
-                        <div className="text-sm text-muted-foreground">Tổng chi phí</div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
 
-                  <Card>
-                    <CardContent className="pt-6">
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-green-600">
-                          {serviceCost.suggestedPrice.toLocaleString('vi-VN')} đ
+                    <Card>
+                      <CardContent className="pt-6">
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-green-600">
+                            {serviceCost.suggestedPrice.toLocaleString('vi-VN')} đ
+                          </div>
+                          <div className="text-sm text-muted-foreground">Giá đề xuất</div>
                         </div>
-                        <div className="text-sm text-muted-foreground">Giá đề xuất</div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
 
-                  <Card>
-                    <CardContent className="pt-6">
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-blue-600">
-                          {serviceCost.profitMargin.toFixed(1)}%
+                    <Card>
+                      <CardContent className="pt-6">
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-blue-600">
+                            {serviceCost.profitMargin.toFixed(1)}%
+                          </div>
+                          <div className="text-sm text-muted-foreground">Tỷ lệ lợi nhuận</div>
                         </div>
-                        <div className="text-sm text-muted-foreground">Tỷ lệ lợi nhuận</div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
     </div>
     </>

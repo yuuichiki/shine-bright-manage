@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import NavigationMenu from '@/components/NavigationMenu';
 import { 
   Card, 
@@ -24,37 +24,68 @@ import {
   DialogTitle,
   DialogTrigger
 } from "@/components/ui/dialog";
-import { Plus, Edit, Trash2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Loader2 } from 'lucide-react';
+import { useToast } from "@/components/ui/use-toast";
+import { useApi } from '@/hooks/useApi';
 
 type CarCategory = {
   id: number;
   name: string;
   description: string;
-  serviceMultiplier: number; // Hệ số giá cho loại xe này
+  service_multiplier: number;
 };
 
 const CarCategories = () => {
-  const [categories, setCategories] = useState<CarCategory[]>([
-    { id: 1, name: 'Xe con 4 chỗ', description: 'Xe sedan, hatchback kích thước nhỏ', serviceMultiplier: 1 },
-    { id: 2, name: 'Xe con 7 chỗ', description: 'Xe SUV, MPV kích thước trung bình', serviceMultiplier: 1.3 },
-    { id: 3, name: 'Xe bán tải', description: 'Xe pickup, bán tải các loại', serviceMultiplier: 1.5 },
-    { id: 4, name: 'Xe sang', description: 'Xe hạng sang, siêu xe', serviceMultiplier: 2 }
-  ]);
-
+  const { toast } = useToast();
+  const { callApi, loading } = useApi();
+  const [categories, setCategories] = useState<CarCategory[]>([]);
   const [newCategory, setNewCategory] = useState<Partial<CarCategory>>({});
   const [editingCategory, setEditingCategory] = useState<CarCategory | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
-  const handleAddCategory = () => {
-    if (newCategory.name && newCategory.serviceMultiplier) {
-      const categoryToAdd = {
-        ...newCategory,
-        id: Math.max(...categories.map(c => c.id), 0) + 1
-      } as CarCategory;
-      setCategories([...categories, categoryToAdd]);
-      setNewCategory({});
-      setIsDialogOpen(false);
+  // Load car categories from database
+  useEffect(() => {
+    loadCategories();
+  }, []);
+
+  const loadCategories = async () => {
+    const data = await callApi<void, CarCategory[]>({
+      url: '/car-categories',
+      method: 'GET'
+    });
+    if (data) {
+      setCategories(data);
+    }
+  };
+
+  const handleAddCategory = async () => {
+    if (newCategory.name && newCategory.service_multiplier) {
+      const createdCategory = await callApi<Partial<CarCategory>, CarCategory>({
+        url: '/car-categories',
+        method: 'POST',
+        body: {
+          name: newCategory.name,
+          description: newCategory.description || '',
+          service_multiplier: newCategory.service_multiplier
+        }
+      });
+
+      if (createdCategory) {
+        setCategories([...categories, createdCategory]);
+        setNewCategory({});
+        setIsDialogOpen(false);
+        toast({
+          title: "Đã thêm loại xe mới",
+          description: `Loại xe ${createdCategory.name} đã được thêm thành công.`,
+        });
+      }
+    } else {
+      toast({
+        title: "Thiếu thông tin",
+        description: "Vui lòng điền đầy đủ tên và hệ số giá dịch vụ.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -63,19 +94,63 @@ const CarCategories = () => {
     setIsEditDialogOpen(true);
   };
 
-  const handleUpdateCategory = () => {
-    if (editingCategory && editingCategory.name && editingCategory.serviceMultiplier) {
-      setCategories(categories.map(cat => 
-        cat.id === editingCategory.id ? editingCategory : cat
-      ));
-      setEditingCategory(null);
-      setIsEditDialogOpen(false);
+  const handleUpdateCategory = async () => {
+    if (editingCategory && editingCategory.name && editingCategory.service_multiplier) {
+      const updatedCategory = await callApi<Partial<CarCategory>, CarCategory>({
+        url: `/car-categories/${editingCategory.id}`,
+        method: 'PUT',
+        body: {
+          name: editingCategory.name,
+          description: editingCategory.description || '',
+          service_multiplier: editingCategory.service_multiplier
+        }
+      });
+
+      if (updatedCategory) {
+        setCategories(categories.map(cat => 
+          cat.id === editingCategory.id ? updatedCategory : cat
+        ));
+        setEditingCategory(null);
+        setIsEditDialogOpen(false);
+        toast({
+          title: "Đã cập nhật loại xe",
+          description: `Loại xe ${updatedCategory.name} đã được cập nhật thành công.`,
+        });
+      }
     }
   };
 
-  const handleDeleteCategory = (id: number) => {
-    setCategories(categories.filter(cat => cat.id !== id));
+  const handleDeleteCategory = async (id: number) => {
+    const categoryToDelete = categories.find(cat => cat.id === id);
+    if (categoryToDelete) {
+      const success = await callApi<void, void>({
+        url: `/car-categories/${id}`,
+        method: 'DELETE'
+      });
+      
+      if (success !== null) {
+        setCategories(categories.filter(cat => cat.id !== id));
+        toast({
+          title: "Đã xóa loại xe",
+          description: `Loại xe ${categoryToDelete.name} đã được xóa thành công.`,
+        });
+      }
+    }
   };
+
+  if (loading && categories.length === 0) {
+    return (
+      <>
+        <NavigationMenu />
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-center h-64">
+            <Loader2 className="h-8 w-8 animate-spin" />
+            <span className="ml-2">Đang tải dữ liệu loại xe...</span>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -112,10 +187,13 @@ const CarCategories = () => {
                     type="number" 
                     step="0.1"
                     placeholder="Hệ số giá dịch vụ" 
-                    value={newCategory.serviceMultiplier || ''}
-                    onChange={(e) => setNewCategory({...newCategory, serviceMultiplier: Number(e.target.value)})}
+                    value={newCategory.service_multiplier || ''}
+                    onChange={(e) => setNewCategory({...newCategory, service_multiplier: Number(e.target.value)})}
                   />
-                  <Button onClick={handleAddCategory}>Lưu Loại Xe</Button>
+                  <Button onClick={handleAddCategory} disabled={loading}>
+                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Lưu Loại Xe
+                  </Button>
                 </div>
               </DialogContent>
             </Dialog>
@@ -143,13 +221,17 @@ const CarCategories = () => {
                 type="number" 
                 step="0.1"
                 placeholder="Hệ số giá dịch vụ" 
-                value={editingCategory?.serviceMultiplier || ''}
-                onChange={(e) => setEditingCategory(prev => prev ? {...prev, serviceMultiplier: Number(e.target.value)} : null)}
+                value={editingCategory?.service_multiplier || ''}
+                onChange={(e) => setEditingCategory(prev => prev ? {...prev, service_multiplier: Number(e.target.value)} : null)}
               />
-              <Button onClick={handleUpdateCategory}>Cập Nhật</Button>
+              <Button onClick={handleUpdateCategory} disabled={loading}>
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Cập Nhật
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
+        
         <CardContent>
           <Table>
             <TableHeader>
@@ -165,7 +247,7 @@ const CarCategories = () => {
                 <TableRow key={category.id}>
                   <TableCell>{category.name}</TableCell>
                   <TableCell>{category.description}</TableCell>
-                  <TableCell>{category.serviceMultiplier}</TableCell>
+                  <TableCell>{category.service_multiplier}</TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
                       <Button variant="outline" size="icon" onClick={() => handleEditCategory(category)}>
