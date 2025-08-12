@@ -49,13 +49,8 @@ type Expense = {
 };
 
 const ExpenseManagement = () => {
-  const [expenses, setExpenses] = useState<Expense[]>([
-    { id: 1, name: 'Thuê mặt bằng', amount: 15000000, type: 'fixed', description: 'Chi phí thuê cửa hàng hàng tháng', frequency: 'monthly', isActive: true },
-    { id: 2, name: 'Lương nhân viên', amount: 25000000, type: 'fixed', description: 'Tổng lương nhân viên/tháng', frequency: 'monthly', isActive: true },
-    { id: 3, name: 'Điện nước', amount: 3000000, type: 'variable', description: 'Chi phí điện nước hàng tháng', frequency: 'monthly', isActive: true },
-    { id: 4, name: 'Thuế VAT', amount: 0.1, type: 'tax', description: 'Thuế VAT 10%', frequency: 'daily', isActive: true },
-    { id: 5, name: 'Chiết khấu khách hàng VIP', amount: 0.05, type: 'discount', description: 'Giảm giá 5% cho khách VIP', frequency: 'daily', isActive: true }
-  ]);
+  const { callApi } = useApi();
+  const [expenses, setExpenses] = useState<Expense[]>([]);
 
   const [newExpense, setNewExpense] = useState<Partial<Expense>>({});
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
@@ -63,43 +58,69 @@ const ExpenseManagement = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const { toast } = useToast();
 
-  // Real daily revenue from invoices
-  const invoices = [
-    { 
-      id: 1, 
-      date: '2025-01-24', 
-      total: 250000,
-      status: 'paid'
-    },
-    { 
-      id: 2, 
-      date: '2025-01-24', 
-      total: 750000,
-      status: 'paid'
-    },
-    { 
-      id: 3, 
-      date: '2025-01-24', 
-      total: 1200000,
-      status: 'pending'
-    }
-  ];
+  const [todayRevenue, setTodayRevenue] = useState<number>(0);
 
-  const today = new Date().toISOString().split('T')[0];
-  const todayRevenue = invoices
-    .filter(inv => inv.date === today && inv.status === 'paid')
-    .reduce((sum, inv) => sum + inv.total, 0);
+  useEffect(() => {
+    const fetchData = async () => {
+      // Load expenses from DB
+      const exp = await callApi<null, any[]>({ url: '/expenses' });
+      if (Array.isArray(exp)) {
+        setExpenses(exp.map((e: any) => ({
+          id: e.id,
+          name: e.name,
+          amount: Number(e.amount),
+          type: e.type,
+          description: e.description || '',
+          frequency: e.frequency,
+          isActive: e.is_active ?? e.isActive ?? true,
+        })));
+      }
 
-  const handleAddExpense = () => {
-    if (newExpense.name && newExpense.amount && newExpense.type && newExpense.frequency) {
-      const expenseToAdd = {
-        ...newExpense,
-        id: Math.max(...expenses.map(e => e.id), 0) + 1,
-        isActive: true
-      } as Expense;
-      setExpenses([...expenses, expenseToAdd]);
-      setNewExpense({});
-      setIsDialogOpen(false);
+      // Load invoices to compute today's revenue
+      const invs = await callApi<null, any[]>({ url: '/invoices' });
+      if (Array.isArray(invs)) {
+        const today = new Date().toISOString().split('T')[0];
+        const revenue = invs
+          .filter((inv: any) => {
+            const d = (inv.date || inv.invoice_date || '').toString().slice(0, 10);
+            return d === today && (inv.status ? inv.status === 'paid' : true);
+          })
+          .reduce((sum: number, inv: any) => {
+            const total = Number(inv.total ?? inv.total_amount ?? inv.grand_total ?? inv.amount ?? 0);
+            return sum + (isNaN(total) ? 0 : total);
+          }, 0);
+        setTodayRevenue(revenue);
+      }
+    };
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleAddExpense = async () => {
+    if (newExpense.name && newExpense.amount !== undefined && newExpense.type && newExpense.frequency) {
+      const payload: any = {
+        name: newExpense.name,
+        amount: Number(newExpense.amount),
+        type: newExpense.type,
+        description: newExpense.description || '',
+        frequency: newExpense.frequency,
+        is_active: true,
+      };
+      const created = await callApi<any, any>({ url: '/expenses', method: 'POST', body: payload });
+      if (created) {
+        setExpenses(prev => [...prev, {
+          id: created.id,
+          name: created.name,
+          amount: Number(created.amount),
+          type: created.type,
+          description: created.description || '',
+          frequency: created.frequency,
+          isActive: created.is_active ?? true,
+        }]);
+        setNewExpense({});
+        setIsDialogOpen(false);
+        toast({ title: 'Thành công', description: 'Đã thêm chi phí.' });
+      }
     }
   };
 
@@ -108,24 +129,52 @@ const ExpenseManagement = () => {
     setIsEditDialogOpen(true);
   };
 
-  const handleUpdateExpense = () => {
+  const handleUpdateExpense = async () => {
     if (editingExpense) {
-      setExpenses(expenses.map(exp => 
-        exp.id === editingExpense.id ? editingExpense : exp
-      ));
-      setEditingExpense(null);
-      setIsEditDialogOpen(false);
+      const payload: any = {
+        name: editingExpense.name,
+        amount: editingExpense.amount,
+        type: editingExpense.type,
+        description: editingExpense.description,
+        frequency: editingExpense.frequency,
+        is_active: editingExpense.isActive,
+      };
+      const updated = await callApi<any, any>({ url: `/expenses/${editingExpense.id}`, method: 'PUT', body: payload });
+      if (updated) {
+        setExpenses(prev => prev.map(exp => 
+          exp.id === editingExpense.id 
+            ? { id: updated.id, name: updated.name, amount: Number(updated.amount), type: updated.type, description: updated.description || '', frequency: updated.frequency, isActive: updated.is_active ?? editingExpense.isActive }
+            : exp
+        ));
+        setEditingExpense(null);
+        setIsEditDialogOpen(false);
+        toast({ title: 'Đã cập nhật', description: 'Cập nhật chi phí thành công.' });
+      }
     }
   };
 
-  const handleDeleteExpense = (id: number) => {
-    setExpenses(expenses.filter(exp => exp.id !== id));
+  const handleDeleteExpense = async (id: number) => {
+    const res = await callApi<null, any>({ url: `/expenses/${id}`, method: 'DELETE' });
+    if (res !== null) {
+      setExpenses(prev => prev.filter(exp => exp.id !== id));
+      toast({ title: 'Đã xóa', description: 'Đã xóa chi phí.' });
+    }
   };
 
-  const toggleExpenseStatus = (id: number) => {
-    setExpenses(expenses.map(exp => 
-      exp.id === id ? { ...exp, isActive: !exp.isActive } : exp
-    ));
+  const toggleExpenseStatus = async (id: number) => {
+    const exp = expenses.find(e => e.id === id);
+    if (!exp) return;
+    const updated = await callApi<any, any>({ url: `/expenses/${id}`, method: 'PUT', body: {
+      name: exp.name,
+      amount: exp.amount,
+      type: exp.type,
+      description: exp.description,
+      frequency: exp.frequency,
+      is_active: !exp.isActive,
+    }});
+    if (updated) {
+      setExpenses(prev => prev.map(e => e.id === id ? { ...e, isActive: !e.isActive } : e));
+    }
   };
 
   // Calculate daily expenses
