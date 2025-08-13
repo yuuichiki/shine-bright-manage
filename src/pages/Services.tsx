@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Edit, Plus, Trash2 } from 'lucide-react';
+import { Edit, Plus, Trash2, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 // Types
@@ -56,7 +56,7 @@ const Services = () => {
 
     const created = await callApi<typeof payload, Service>({ url: '/services', method: 'POST', body: payload });
     if (created) {
-      setServices((prev) => [...prev, created]);
+      await loadServices();
       setNewService({});
       setIsCreateOpen(false);
       toast({ title: 'Thành công', description: 'Đã thêm dịch vụ.' });
@@ -84,7 +84,7 @@ const Services = () => {
     });
 
     if (updated) {
-      setServices((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
+      await loadServices();
       setIsEditOpen(false);
       setEditingService(null);
       toast({ title: 'Thành công', description: 'Đã cập nhật dịch vụ.' });
@@ -148,7 +148,10 @@ const Services = () => {
                       value={newService.duration ?? ''}
                       onChange={(e) => setNewService({ ...newService, duration: Number(e.target.value) })}
                     />
-                    <Button onClick={handleCreate}>Lưu Dịch Vụ</Button>
+                    <Button onClick={handleCreate} disabled={loading}>
+                      {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Lưu Dịch Vụ
+                    </Button>
                   </div>
                 </DialogContent>
               </Dialog>

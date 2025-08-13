@@ -72,7 +72,7 @@ const CarCategories = () => {
       });
 
       if (createdCategory) {
-        setCategories([...categories, createdCategory]);
+        await loadCategories();
         setNewCategory({});
         setIsDialogOpen(false);
         toast({
@@ -107,9 +107,7 @@ const CarCategories = () => {
       });
 
       if (updatedCategory) {
-        setCategories(categories.map(cat => 
-          cat.id === editingCategory.id ? updatedCategory : cat
-        ));
+        await loadCategories();
         setEditingCategory(null);
         setIsEditDialogOpen(false);
         toast({
