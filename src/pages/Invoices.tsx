@@ -321,7 +321,7 @@ const Invoices = () => {
 
             <div class="total-section">
               <div class="total-row">
-                <strong>TỔNG CỘNG: ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(invoice.total)}</strong>
+                <p>TỔNG CỘNG: ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(invoice.total)}</p>
               </div>
             </div>
 

@@ -2,23 +2,49 @@ import express from 'express';
 const router = express.Router();
 
 // Get attendance records by date
+const API_BASE_URL = 'http://localhost:5177/api/Attendances';
+
 router.get('/', async (req, res) => {
+  // try {
+  //   const { date } = req.query;
+  //   const targetDate = date || new Date().toISOString().split('T')[0];
+    
+  //   const records = req.db.all(`
+  //     SELECT a.*, e.name as employee_name, e.card_id
+  //     FROM attendance a
+  //     JOIN employees e ON a.employee_id = e.id
+  //     WHERE DATE(a.date) = ?
+  //     ORDER BY a.check_in DESC
+  //   `, [targetDate]);
+    
+  //   res.json(records);
+  // } catch (error) {
+  //   res.status(500).json({ error: error.message });
+  // }
+
   try {
-    const { date } = req.query;
     const targetDate = date || new Date().toISOString().split('T')[0];
+    const url = `${API_BASE_URL}`;
     
-    const records = req.db.all(`
-      SELECT a.*, e.name as employee_name, e.card_id
-      FROM attendance a
-      JOIN employees e ON a.employee_id = e.id
-      WHERE DATE(a.date) = ?
-      ORDER BY a.check_in DESC
-    `, [targetDate]);
-    
-    res.json(records);
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Lỗi khi lấy dữ liệu chấm công');
+    }
+
+    const records = await response.json();
+    return records;
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    throw new Error(error.message);
   }
+
+
 });
 
 // Card swipe for attendance

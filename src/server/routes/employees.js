@@ -1,13 +1,26 @@
 import express from 'express';
 const router = express.Router();
-
+const API_BASE_URL = '/api/employees';
 // Get all employees
 router.get('/', async (req, res) => {
   try {
-    const employees = req.db.all('SELECT * FROM employees ORDER BY name');
-    res.json(employees);
+    console.log(API_BASE_URL);
+    const response = await fetch(API_BASE_URL, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Lỗi khi lấy danh sách nhân viên');
+    }
+
+    const employees = await response.json();
+    return employees;
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    throw new Error(error.message);
   }
 });
 
@@ -87,11 +100,10 @@ router.put('/:id', async (req, res) => {
 // Delete employee
 router.delete('/:id', async (req, res) => {
   try {
-    const { id } = req.params;
-    req.db.run('DELETE FROM employees WHERE id = ?', [id]);
-    res.json({ success: true });
+    const response = await axios.delete(`${API_BASE_URL}/${id}`);
+    return response.data;
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    throw new Error(error.response?.data?.error || 'Lỗi khi xóa nhân viên');
   }
 });
 

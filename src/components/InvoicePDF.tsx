@@ -196,7 +196,7 @@ const InvoicePDF: React.FC<InvoicePDFProps> = ({ invoice }) => {
 
         <div className="total-section">
           <div className="total-row">
-            <strong>TỔNG CỘNG: {formatCurrency(invoice.total)}</strong>
+            <p>TỔNG CỘNG: {formatCurrency(invoice.total)}</p>
           </div>
         </div>
 
