@@ -11,10 +11,17 @@ import { useToast } from '@/hooks/use-toast';
 
 interface Batch {
   id: number;
-  batch_code: string;
-  import_date: string;
-  supplier_id?: number;
-  supplier_name?: string;
+  batchCode: string;
+  importDate: string;
+  supplierId?: number;
+  supplier?: {
+    id: number;
+    name: string;
+    contact: string;
+    phone: string;
+    email: string;
+    address: string;
+  };
   notes?: string;
 }
 
@@ -25,7 +32,7 @@ const Batches: React.FC = () => {
   const [batches, setBatches] = useState<Batch[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newBatch, setNewBatch] = useState<Partial<Batch>>({
-    import_date: new Date().toISOString().slice(0, 10),
+    importDate: new Date().toISOString().slice(0, 10),
   });
 
   const loadBatches = async () => {
@@ -34,10 +41,10 @@ const Batches: React.FC = () => {
       setBatches(
         data.map((b: any) => ({
           id: b.id,
-          batch_code: b.batch_code,
-          import_date: b.import_date,
-          supplier_id: b.supplier_id,
-          supplier_name: b.supplier_name,
+          batchCode: b.batchCode,
+          importDate: b.importDate,
+          supplierId: b.supplierId,
+          supplier: b.supplier,
           notes: b.notes,
         }))
       );
@@ -50,21 +57,21 @@ const Batches: React.FC = () => {
   }, []);
 
   const handleAddBatch = async () => {
-    if (!newBatch.batch_code || !newBatch.import_date) {
+    if (!newBatch.batchCode || !newBatch.importDate) {
       toast({ title: 'Thiếu thông tin', description: 'Vui lòng nhập mã lô hàng và ngày nhập.', variant: 'destructive' });
       return;
     }
     const payload: any = {
-      batch_code: newBatch.batch_code,
-      supplier_id: newBatch.supplier_id || null,
-      import_date: newBatch.import_date,
+      batchCode: newBatch.batchCode,
+      supplierId: newBatch.supplierId || null,
+      importDate: newBatch.importDate,
       notes: newBatch.notes || '',
     };
     const created = await callApi<any, any>({ url: '/batches', method: 'POST', body: payload });
     if (created) {
       toast({ title: 'Thành công', description: 'Đã thêm lô hàng mới.' });
       setIsDialogOpen(false);
-      setNewBatch({ import_date: new Date().toISOString().slice(0, 10) });
+      setNewBatch({ importDate: new Date().toISOString().slice(0, 10) });
       loadBatches();
     }
   };
@@ -95,16 +102,16 @@ const Batches: React.FC = () => {
                         <label className="text-sm font-medium mb-1 block">Mã Lô Hàng</label>
                         <Input
                           placeholder="Ví dụ: LH-2025-004"
-                          value={newBatch.batch_code || ''}
-                          onChange={(e) => setNewBatch({ ...newBatch, batch_code: e.target.value })}
+                          value={newBatch.batchCode || ''}
+                          onChange={(e) => setNewBatch({ ...newBatch, batchCode: e.target.value })}
                         />
                       </div>
                       <div>
                         <label className="text-sm font-medium mb-1 block">Ngày Nhập</label>
                         <Input
                           type="date"
-                          value={newBatch.import_date || ''}
-                          onChange={(e) => setNewBatch({ ...newBatch, import_date: e.target.value })}
+                          value={newBatch.importDate || ''}
+                          onChange={(e) => setNewBatch({ ...newBatch, importDate: e.target.value })}
                         />
                       </div>
                     </div>
@@ -115,8 +122,8 @@ const Batches: React.FC = () => {
                         <Input
                           type="number"
                           placeholder="ID nhà cung cấp (tùy chọn)"
-                          value={newBatch.supplier_id ?? ''}
-                          onChange={(e) => setNewBatch({ ...newBatch, supplier_id: e.target.value ? Number(e.target.value) : undefined })}
+                          value={newBatch.supplierId ?? ''}
+                          onChange={(e) => setNewBatch({ ...newBatch, supplierId: e.target.value ? Number(e.target.value) : undefined })}
                         />
                       </div>
                       <div>
@@ -148,9 +155,9 @@ const Batches: React.FC = () => {
               <TableBody>
                 {batches.map((batch) => (
                   <TableRow key={batch.id}>
-                    <TableCell>{batch.batch_code}</TableCell>
-                    <TableCell>{batch.import_date}</TableCell>
-                    <TableCell>{batch.supplier_name || batch.supplier_id || '—'}</TableCell>
+                    <TableCell>{batch.batchCode}</TableCell>
+                    <TableCell>{new Date(batch.importDate).toLocaleDateString('vi-VN')}</TableCell>
+                    <TableCell>{batch.supplier?.name || batch.supplierId || '—'}</TableCell>
                     <TableCell>{batch.notes || '—'}</TableCell>
                   </TableRow>
                 ))}
