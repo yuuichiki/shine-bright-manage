@@ -50,7 +50,7 @@ interface InventoryItem {
   name: string;
   category_id?: number;
   category_name?: string;
-  category?: string;
+  category?: string | { id: number; name: string; description?: string };
   type: 'consumable' | 'equipment';
   quantity: number;
   unit: string;
@@ -322,7 +322,7 @@ const EnhancedInventory = () => {
                           />
                           <Input 
                             placeholder="Phân loại" 
-                            value={newItem.category || ''}
+                            value={typeof newItem.category === 'string' ? newItem.category : newItem.category?.name || ''}
                             onChange={(e) => setNewItem({...newItem, category: e.target.value})}
                           />
                           <Select
@@ -437,7 +437,7 @@ const EnhancedInventory = () => {
                       {inventory.map((item) => (
                         <TableRow key={item.id} className={item.quantity <= item.reorder_point ? "bg-amber-50" : ""}>
                           <TableCell>{item.name}</TableCell>
-                          <TableCell>{item.category_name || item.category}</TableCell>
+                          <TableCell>{item.category_name || (typeof item.category === 'string' ? item.category : item.category?.name) || '—'}</TableCell>
                           <TableCell>{item.type === 'consumable' ? 'Vật tư hao phí' : 'Thiết bị'}</TableCell>
                           <TableCell className={item.quantity <= item.reorder_point ? "text-red-600 font-medium" : ""}>
                             {item.quantity} {item.unit} {item.quantity <= item.reorder_point && "(Cần nhập thêm)"}
@@ -517,7 +517,7 @@ const EnhancedInventory = () => {
                       {inventory.filter(item => item.type === 'consumable').map((item) => (
                         <TableRow key={item.id} className={item.quantity <= item.reorder_point ? "bg-amber-50" : ""}>
                           <TableCell>{item.name}</TableCell>
-                          <TableCell>{item.category_name || item.category}</TableCell>
+                          <TableCell>{item.category_name || (typeof item.category === 'string' ? item.category : item.category?.name) || '—'}</TableCell>
                           <TableCell>{item.quantity} {item.unit}</TableCell>
                           <TableCell>{item.usage_rate || "—"}</TableCell>
                           <TableCell>{item.import_date}</TableCell>
@@ -579,7 +579,7 @@ const EnhancedInventory = () => {
                       {inventory.filter(item => item.type === 'equipment').map((item) => (
                         <TableRow key={item.id}>
                           <TableCell>{item.name}</TableCell>
-                          <TableCell>{item.category_name || item.category}</TableCell>
+                          <TableCell>{item.category_name || (typeof item.category === 'string' ? item.category : item.category?.name) || '—'}</TableCell>
                           <TableCell>{item.quantity} {item.unit}</TableCell>
                           <TableCell>{item.import_date}</TableCell>
                           <TableCell>{item.batch_code || "—"}</TableCell>
@@ -637,7 +637,7 @@ const EnhancedInventory = () => {
                   />
                   <Input 
                     placeholder="Phân loại" 
-                    value={editingItem.category || editingItem.category_name || ''}
+                    value={typeof editingItem.category === 'string' ? editingItem.category : editingItem.category_name || ''}
                     onChange={(e) => setEditingItem({...editingItem, category: e.target.value})}
                   />
                   <Select
