@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus } from 'lucide-react';
 import useApi from '@/hooks/useApi';
 import { useToast } from '@/hooks/use-toast';
@@ -25,11 +26,21 @@ interface Batch {
   notes?: string;
 }
 
+interface Supplier {
+  id: number;
+  name: string;
+  contact: string;
+  phone: string;
+  email: string;
+  address: string;
+}
+
 const Batches: React.FC = () => {
   const { callApi } = useApi();
   const { toast } = useToast();
 
   const [batches, setBatches] = useState<Batch[]>([]);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newBatch, setNewBatch] = useState<Partial<Batch>>({
     importDate: new Date().toISOString().slice(0, 10),
@@ -51,8 +62,16 @@ const Batches: React.FC = () => {
     }
   };
 
+  const loadSuppliers = async () => {
+    const data = await callApi<null, Supplier[]>({ url: '/suppliers' });
+    if (Array.isArray(data)) {
+      setSuppliers(data);
+    }
+  };
+
   useEffect(() => {
     loadBatches();
+    loadSuppliers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -118,13 +137,22 @@ const Batches: React.FC = () => {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="text-sm font-medium mb-1 block">Nhà Cung Cấp (ID)</label>
-                        <Input
-                          type="number"
-                          placeholder="ID nhà cung cấp (tùy chọn)"
-                          value={newBatch.supplierId ?? ''}
-                          onChange={(e) => setNewBatch({ ...newBatch, supplierId: e.target.value ? Number(e.target.value) : undefined })}
-                        />
+                        <label className="text-sm font-medium mb-1 block">Nhà Cung Cấp</label>
+                        <Select
+                          value={newBatch.supplierId?.toString() || ''}
+                          onValueChange={(value) => setNewBatch({ ...newBatch, supplierId: value ? Number(value) : undefined })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Chọn nhà cung cấp (tùy chọn)" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {suppliers.map((supplier) => (
+                              <SelectItem key={supplier.id} value={supplier.id.toString()}>
+                                {supplier.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div>
                         <label className="text-sm font-medium mb-1 block">Ghi chú</label>
