@@ -116,3 +116,35 @@ export const generateVoucherReport = (vouchers: any[]) => {
   const doc = generatePDFReport(reportData);
   downloadPDF(doc, 'bao-cao-voucher');
 };
+
+export const generateInventoryReport = (inventory: any[]) => {
+  const totalValue = inventory.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
+  const lowStockItems = inventory.filter(item => item.quantity <= item.reorder_point);
+  
+  const reportData: ReportData = {
+    title: 'Báo Cáo Tồn Kho',
+    headers: ['Tên sản phẩm', 'Phân loại', 'Loại', 'Số lượng', 'Đơn vị', 'Giá đơn vị', 'Tổng giá trị', 'Ngày nhập', 'Lô hàng', 'Trạng thái'],
+    data: inventory.map(item => [
+      item.name,
+      item.category_name || (typeof item.category === 'string' ? item.category : item.category?.name) || '—',
+      item.type === 'consumable' ? 'Vật tư hao phí' : 'Thiết bị',
+      item.quantity.toString(),
+      item.unit,
+      formatCurrency(item.unit_price),
+      formatCurrency(item.quantity * item.unit_price),
+      new Date(item.import_date).toLocaleDateString('vi-VN'),
+      item.batch_code || '—',
+      item.quantity <= item.reorder_point ? 'Cần nhập thêm' : 'Bình thường'
+    ]),
+    summary: [
+      { label: 'Tổng số sản phẩm', value: inventory.length.toString() },
+      { label: 'Tổng giá trị kho', value: formatCurrency(totalValue) },
+      { label: 'Số sản phẩm cần nhập thêm', value: lowStockItems.length.toString() },
+      { label: 'Vật tư hao phí', value: inventory.filter(item => item.type === 'consumable').length.toString() },
+      { label: 'Thiết bị', value: inventory.filter(item => item.type === 'equipment').length.toString() }
+    ]
+  };
+  
+  const doc = generatePDFReport(reportData);
+  downloadPDF(doc, 'bao-cao-ton-kho');
+};

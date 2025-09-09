@@ -43,6 +43,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import useApi from "@/hooks/useApi";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { generateInventoryReport } from "@/utils/pdfGenerator";
 
 // Định nghĩa kiểu dữ liệu
 interface InventoryItem {
@@ -245,6 +246,14 @@ const EnhancedInventory = () => {
 
   const lowStockItems = getLowStockItems();
 
+  const handleExportReport = () => {
+    generateInventoryReport(inventory);
+    toast({
+      title: "Thành công",
+      description: "Báo cáo tồn kho đã được xuất",
+    });
+  };
+
   if (error) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -297,7 +306,7 @@ const EnhancedInventory = () => {
                   <div className="flex justify-between items-center">
                     <CardTitle>Danh Sách Hàng Tồn Kho</CardTitle>
                     <div className="flex gap-2">
-                      <Button variant="outline">
+                      <Button variant="outline" onClick={handleExportReport}>
                         <FileDown className="mr-2 h-4 w-4" />
                         Xuất Báo Cáo
                       </Button>
